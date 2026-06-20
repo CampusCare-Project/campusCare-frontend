@@ -5,7 +5,9 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "plugins": [
       "expo-sqlite",
       [
@@ -20,7 +22,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "CampusCare membutuhkan lokasi untuk menandai titik laporan kerusakan."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "ios": {
       "supportsTablet": true
@@ -29,7 +32,11 @@
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF"
       },
-      "permissions": ["CAMERA", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "extra": {
       "apiBaseUrl": "http://localhost:8080"

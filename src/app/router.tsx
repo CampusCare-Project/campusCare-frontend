@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { navigationRef } from "./navigationRef";
-
+import { setUnauthorizedHandler } from "@/api/auth/authEvents";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Text } from "react-native";
@@ -226,6 +226,16 @@ export function AppRouter() {
     void initDb();
     void restore();
   }, []);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      void restore();
+    });
+
+    return () => {
+      setUnauthorizedHandler(null);
+    };
+  }, [restore]);
 
   if (bootstrapping) return null;
 

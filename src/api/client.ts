@@ -1,10 +1,10 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { toast } from "sonner-native";
-import { store } from "@/store";
-import { clearAuth } from "@/store/slices/authSlice";
+
 import { ENV } from "@/config/env";
-import { resetTo,resetToMainTabs } from "@/app/navigationRef";
+import { resetToMainTabs } from "@/app/navigationRef";
+import { emitUnauthorized } from "@/api/auth/authEvents";
 
 export const TOKEN_KEY = "campuscare_token";
 export const USER_KEY = "campuscare_user";
@@ -44,28 +44,26 @@ privateClient.interceptors.response.use(
 
     if (status === 401) {
       if (!isHandlingUnauthorized) {
-    isHandlingUnauthorized = true;
+        isHandlingUnauthorized = true;
 
-    await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
+        await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
 
-    store.dispatch(clearAuth());
+        toast.error("Session sudah habis. Silakan login kembali.");
 
-    toast.error("Session sudah habis. Silakan login kembali.");
-    resetTo("Login");
+        emitUnauthorized();
 
-    setTimeout(() => {
-      isHandlingUnauthorized = false;
-    }, 1000);
-  }
-}
+        setTimeout(() => {
+          isHandlingUnauthorized = false;
+        }, 1000);
+      }
+    }
 
     if (status === 403) {
       if (!isHandlingForbidden) {
         isHandlingForbidden = true;
 
         toast.error(message || "Kamu tidak memiliki akses.");
-
-    resetToMainTabs("Dashboard");
+        resetToMainTabs("Dashboard");
 
         setTimeout(() => {
           isHandlingForbidden = false;
