@@ -1,0 +1,37 @@
+import { useState } from 'react';
+import { Alert, Pressable, Text, View } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Screen } from '@/components/ui/Screen';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Input } from '@/components/ui/Input';
+import { reportService } from '@/api/reports/service';
+import type { RootStackParamList } from '@/app/router';
+import type { NoteVisibility } from '@/api/reports/types';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'RepairNote'>;
+
+export function RepairNoteScreen({ route, navigation }: Props) {
+  const { id } = route.params;
+  const [note, setNote] = useState('');
+  const [visibility, setVisibility] = useState<NoteVisibility>('PUBLIC');
+  const [loading, setLoading] = useState(false);
+
+  const submit = async () => {
+    setLoading(true);
+    try { await reportService.addNote(id, { note, visibility }); Alert.alert('Berhasil', 'Catatan disimpan.'); navigation.goBack(); }
+    catch (e: any) { Alert.alert('Gagal', e?.message || 'Gagal menyimpan catatan'); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <Screen>
+      <Input label="Catatan perbaikan" value={note} onChangeText={setNote} multiline numberOfLines={5} />
+      <Text style={{ fontWeight: '900' }}>Visibility</Text>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        {(['PUBLIC', 'INTERNAL'] as NoteVisibility[]).map((v) => <Pressable key={v} onPress={() => setVisibility(v)}><Badge label={`${visibility === v ? '✓ ' : ''}${v}`} /></Pressable>)}
+      </View>
+      <Button title="Simpan Catatan" onPress={submit} loading={loading} />
+    </Screen>
+  );
+}

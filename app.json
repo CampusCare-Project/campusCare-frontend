@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "CampusCare",
+    "slug": "campuscare-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": ["**/*"],
+    "plugins": [
+      "expo-sqlite",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "CampusCare membutuhkan akses galeri untuk upload foto kerusakan.",
+          "cameraPermission": "CampusCare membutuhkan akses kamera untuk mengambil foto kerusakan."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "CampusCare membutuhkan lokasi untuk menandai titik laporan kerusakan."
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF"
+      },
+      "permissions": ["CAMERA", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "extra": {
+      "apiBaseUrl": "http://localhost:8080"
+    }
+  }
+}
