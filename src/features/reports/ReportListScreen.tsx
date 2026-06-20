@@ -12,6 +12,9 @@ import { SearchInput } from "@/components/ui/SearchInput";
 import { DateRangePickerFilter } from "@/components/ui/DateRangerFilter";
 
 import { useAuth } from "@/api/auth/hooks";
+import { authService } from "@/api/auth/service";
+import { User } from "@/api/auth/types";
+
 import { useReports } from "@/api/reports/hooks";
 import { searchInFields } from "@/utils/search";
 
@@ -118,18 +121,113 @@ function getPriorityLabel(priority?: string) {
 
   return labels[priority] || priority;
 }
+function getUserDisplayName(user?: User | null) {
+  if (!user) return null;
+
+  return user.name || user.username || user.email || null;
+}
+
+function getReporterId(report: any) {
+  return (
+    report?.reporterId ||
+    report?.userId ||
+    report?.createdById ||
+    report?.creatorId ||
+    null
+  );
+}
+
+function getTechnicianId(report: any) {
+  return (
+    report?.technicianId ||
+    report?.assignedTechnicianId ||
+    report?.assignedToId ||
+    report?.assigneeId ||
+    report?.assignedToTechnicianId ||
+    report?.technicianUserId ||
+    report?.assignedTechnicianUserId ||
+    report?.assignedTo ||
+    null
+  );
+}
 
 export function ReportListScreen({ navigation }: Props) {
   const { user } = useAuth();
-  const { items, loading, fetchReports } = useReports();
+  const {items, loading, fetchReports } = useReports();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-
+const [usersById, setUsersById] = useState<Record<string, User>>({});
+const [usersLoading, setUsersLoading] = useState(false);
   useEffect(() => {
     void fetchReports({ limit: 50 });
   }, []);
+
+  
+useEffect(() => {
+  if (!items.length) return;
+
+  const allIds = items
+    .flatMap((report: any) => [
+      getReporterId(report),
+      getTechnicianId(report),
+    ])
+    .filter(Boolean)
+    .filter((value, index, array) => array.indexOf(value) === index) as string[];
+
+  const missingIds = allIds.filter((userId) => !usersById[userId]);
+
+  if (missingIds.length === 0) return;
+
+  let alive = true;
+
+  const fetchUsers = async () => {
+    try {
+      setUsersLoading(true);
+
+      const results = await Promise.allSettled(
+        missingIds.map(async (userId) => {
+          const userData = await authService.getUserById(userId);
+
+          return {
+            userId,
+            user: userData as User,
+          };
+        })
+      );
+
+      if (!alive) return;
+
+      setUsersById((prev) => {
+        const next = { ...prev };
+
+        for (const result of results) {
+          if (result.status === "fulfilled" && result.value.user) {
+            next[result.value.userId] = result.value.user;
+          } else if (result.status === "rejected") {
+            console.log("FETCH USER DETAIL FAILED:", result.reason);
+          }
+        }
+
+        return next;
+      });
+    } catch (error) {
+      console.log("FETCH USERS ERROR:", error);
+    } finally {
+      if (alive) setUsersLoading(false);
+    }
+  };
+
+  void fetchUsers();
+
+  return () => {
+    alive = false;
+  };
+}, [items, usersById]);
+
+
+
 
   const dateRangeError = useMemo(() => {
     return getDateRangeError(startDate, endDate);
@@ -257,11 +355,21 @@ export function ReportListScreen({ navigation }: Props) {
           const categoryName =
             report.category?.name || report.categoryName || "-";
 
-          const reporterName =
-            report.reporter?.name || report.creator?.name || report.user?.name || "-";
+   const reporterId = getReporterId(report);
+const technicianId = getTechnicianId(report);
 
-          const technicianName =
-            report.assignedTechnician?.name || report.technician?.name || "-";
+const reporterName =
+  report.user?.name ||
+  report.reporter?.name ||
+  report.creator?.name ||
+  getUserDisplayName(reporterId ? usersById[reporterId] : null) ||
+  (reporterId ? (usersLoading ? "Memuat..." : `ID: ${reporterId}`) : "-");
+
+const technicianName =
+  report.assignedTechnician?.name ||
+  report.technician?.name ||
+  getUserDisplayName(technicianId ? usersById[technicianId] : null) ||
+  (technicianId ? (usersLoading ? "Memuat..." : `ID: ${technicianId}`) : "-");
 
           const createdAt =
             report.createdAt || report.reportedAt || report.updatedAt;

@@ -1,6 +1,6 @@
 import { privateClient } from '@/api/client';
 import type { ApiResponse } from '@/types/common';
-import type { MediaAsset, UploadMediaPayload, UploadMediaInput,MediaTargetType,MediaUsageType,MediaSource} from './types';
+import type { MediaAsset,  UploadMediaInput} from './types';
 import { Platform } from "react-native";
 
 function getFileNameFromUri(uri: string) {
@@ -84,5 +84,14 @@ export const mediaService = {
   async remove(id: string) {
     const res = await privateClient.delete<ApiResponse<boolean>>(`/api/media/${id}`);
     return res.data.data;
+  },
+   async getById(id: string) {
+    const response = await privateClient.get<{
+      success: boolean;
+      message: string;
+      data: MediaAsset;
+    }>(`/api/media/${id}`);
+
+    return response.data.data;
   },
 };

@@ -1,62 +1,245 @@
-import { useEffect, useState } from 'react';
-import { Alert, Image, Pressable, Text, View } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import * as Location from 'expo-location';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Screen } from '@/components/ui/Screen';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
-import { useCategories } from '@/api/categories/hooks';
-import { useLocations } from '@/api/locations/hooks';
-import { reportService } from '@/api/reports/service';
-import { mediaService } from '@/api/media/service';
-import { saveLocalReport } from '@/offline/db';
-import type { RootStackParamList } from '@/app/router';
-import type { ReportPriority } from '@/api/reports/types';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Image, StyleSheet, Text, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { toast } from "sonner-native";
 
-type Props = NativeStackScreenProps<RootStackParamList, 'CreateReport'>;
+import { Screen } from "@/components/ui/Screen";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { ZodInput } from "@/components/ui/ZodInput";
+import { SelectorInput } from "@/components/ui/selectorInput";
+import { useCategories } from "@/api/categories/hooks";
+import { useLocations } from "@/api/locations/hooks";
+import { reportService } from "@/api/reports/service";
+import { mediaService } from "@/api/media/service";
+
+import { saveLocalReport } from "@/offline/db";
+
+import type { RootStackParamList } from "@/app/router";
+import type { ReportPriority } from "@/api/reports/types";
+import type { ZodFieldErrors } from "@/utils/zodErrors";
+import { getApiErrorMessage } from "@/utils/apiError";
+
+type Props = NativeStackScreenProps<RootStackParamList, "CreateReport">;
+
+type PriorityOption = {
+  label: string;
+  value: ReportPriority;
+  description?: string;
+};
+
+const PRIORITY_OPTIONS: PriorityOption[] = [
+  {
+    label: "Rendah",
+    value: "LOW",
+    description: "Kerusakan ringan dan tidak terlalu mendesak.",
+  },
+  {
+    label: "Sedang",
+    value: "MEDIUM",
+    description: "Kerusakan normal dan perlu ditangani.",
+  },
+  {
+    label: "Tinggi",
+    value: "HIGH",
+    description: "Kerusakan cukup mengganggu aktivitas.",
+  },
+  {
+    label: "Kritis",
+    value: "CRITICAL",
+    description: "Kerusakan darurat dan perlu segera ditangani.",
+  },
+];
+
+function getFirstError(errors: ZodFieldErrors, field: string) {
+  return errors[field]?.[0] || null;
+}
 
 export function CreateReportScreen({ navigation }: Props) {
   const { items: categories } = useCategories(true);
   const { buildings, rooms, fetchRooms } = useLocations(true);
-  const [categoryId, setCategoryId] = useState('');
-  const [buildingId, setBuildingId] = useState('');
-  const [roomId, setRoomId] = useState('');
-  const [priority, setPriority] = useState<ReportPriority>('MEDIUM');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [locationText, setLocationText] = useState('');
-  const [coords, setCoords] = useState<{ latitude?: number; longitude?: number }>({});
-  const [imageUri, setImageUri] = useState<string | null>(null);
+
+  const [categoryId, setCategoryId] = useState("");
+  const [buildingId, setBuildingId] = useState("");
+  const [roomId, setRoomId] = useState("");
+
+  const [priority, setPriority] = useState<ReportPriority>("MEDIUM");
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [locationText, setLocationText] = useState("");
+
+  const [coords, setCoords] = useState<{
+    latitude?: number;
+    longitude?: number;
+  }>({});
+
+  const [asset, setAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ZodFieldErrors>({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (buildingId) void fetchRooms(buildingId);
+    if (buildingId) {
+      void fetchRooms(buildingId);
+    }
   }, [buildingId]);
 
-const pickImage = async () => {
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ["images"],
-    quality: 0.75,
-  });
+  const selectedCategory = useMemo(() => {
+    return categories.find((category) => category.id === categoryId) || null;
+  }, [categories, categoryId]);
 
-  if (!result.canceled && result.assets?.[0]?.uri) {
-    setImageUri(result.assets[0].uri);
-  }
-};
-  // const pickImage = async () => {
-  //   const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.75 });
-  //   if (!result.canceled) setImageUri(result.assets[0].uri);
-  // };
+  const selectedBuilding = useMemo(() => {
+    return buildings.find((building) => building.id === buildingId) || null;
+  }, [buildings, buildingId]);
+
+  const selectedRoom = useMemo(() => {
+    return rooms.find((room) => room.id === roomId) || null;
+  }, [rooms, roomId]);
+
+  const selectedPriority = useMemo(() => {
+    return (
+      PRIORITY_OPTIONS.find((item) => item.value === priority) ||
+      PRIORITY_OPTIONS[1]
+    );
+  }, [priority]);
+
+  const getCategoryLabel = useCallback((item: any) => {
+    return item.name;
+  }, []);
+
+  const getCategoryValue = useCallback((item: any) => {
+    return item.id;
+  }, []);
+
+  const getCategoryDescription = useCallback((item: any) => {
+    return item.description || item.slug || undefined;
+  }, []);
+
+  const getBuildingLabel = useCallback((item: any) => {
+    return item.name;
+  }, []);
+
+  const getBuildingValue = useCallback((item: any) => {
+    return item.id;
+  }, []);
+
+  const getBuildingDescription = useCallback((item: any) => {
+    const parts = [item.code, item.address].filter(Boolean);
+    return parts.length ? parts.join(" • ") : undefined;
+  }, []);
+
+  const getRoomLabel = useCallback((item: any) => {
+    return item.code ? `${item.code} - ${item.name}` : item.name;
+  }, []);
+
+  const getRoomValue = useCallback((item: any) => {
+    return item.id;
+  }, []);
+
+  const getRoomDescription = useCallback((item: any) => {
+    const parts = [item.floorName, item.description].filter(Boolean);
+    return parts.length ? parts.join(" • ") : undefined;
+  }, []);
+
+  const getPriorityLabel = useCallback((item: PriorityOption) => {
+    return item.label;
+  }, []);
+
+  const getPriorityValue = useCallback((item: PriorityOption) => {
+    return item.value;
+  }, []);
+
+  const getPriorityDescription = useCallback((item: PriorityOption) => {
+    return item.description;
+  }, []);
+
+  const clearFieldError = (fieldName: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[fieldName]) return prev;
+
+      const next = { ...prev };
+      delete next[fieldName];
+
+      return next;
+    });
+  };
+
+  const validateForm = () => {
+    const errors: ZodFieldErrors = {};
+
+    if (!title.trim()) {
+      errors.title = ["Judul laporan wajib diisi"];
+    }
+
+    if (!description.trim()) {
+      errors.description = ["Deskripsi laporan wajib diisi"];
+    }
+
+    if (!categoryId.trim()) {
+      errors.categoryId = ["Kategori wajib dipilih"];
+    }
+
+    setFieldErrors(errors);
+
+    return Object.keys(errors).length === 0;
+  };
+
+  const pickImage = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        toast.error("Izin akses galeri diperlukan untuk memilih foto.");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 0.75,
+      });
+
+      if (!result.canceled && result.assets?.[0]) {
+        setAsset(result.assets[0]);
+        toast.success("Foto kerusakan berhasil dipilih");
+      }
+    } catch (error: any) {
+      toast.error(getApiErrorMessage(error, "Gagal memilih foto"));
+    }
+  };
+
+  const removeImage = () => {
+    setAsset(null);
+    toast.success("Foto dihapus dari pilihan");
+  };
 
   const useCurrentLocation = async () => {
-    const permission = await Location.requestForegroundPermissionsAsync();
-    if (!permission.granted) return Alert.alert('Izin lokasi ditolak');
-    const pos = await Location.getCurrentPositionAsync({});
-    setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
-    setLocationText((old) => old || `Lat ${pos.coords.latitude}, Long ${pos.coords.longitude}`);
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+
+      if (!permission.granted) {
+        toast.error("Izin lokasi ditolak");
+        return;
+      }
+
+      const pos = await Location.getCurrentPositionAsync({});
+
+      setCoords({
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+      });
+
+      setLocationText((old) => {
+        if (old.trim()) return old;
+
+        return `Lat ${pos.coords.latitude}, Long ${pos.coords.longitude}`;
+      });
+
+      toast.success("Lokasi berhasil diambil");
+    } catch (error: any) {
+      toast.error(getApiErrorMessage(error, "Gagal mengambil lokasi"));
+    }
   };
 
   const submitOnline = async () => {
@@ -65,56 +248,89 @@ const pickImage = async () => {
       categoryId,
       buildingId: buildingId || undefined,
       roomId: roomId || undefined,
-      title,
-      description,
+      title: title.trim(),
+      description: description.trim(),
       priority,
-      locationText,
+      locationText: locationText.trim() || undefined,
       latitude: coords.latitude,
       longitude: coords.longitude,
     };
 
     const report = await reportService.create(payload);
 
-    if (imageUri) {
+    if (asset?.uri) {
       const media = await mediaService.upload({
-        uri: imageUri,
-        source: 'CAMERA',
-        targetType: 'REPORT',
+        uri: asset.uri,
+        fileName: asset.fileName,
+        mimeType: asset.mimeType,
+        source: "GALLERY",
+        targetType: "REPORT",
         targetId: report.id,
-        usageType: 'REPORT_DAMAGE_PHOTO',
+        usageType: "REPORT_DAMAGE_PHOTO",
       });
+
       await reportService.addMedia(report.id, {
         mediaId: media.id,
-        type: 'DAMAGE_PHOTO',
-        caption: 'Foto kondisi kerusakan',
+        type: "DAMAGE_PHOTO",
+        caption: "Foto kondisi kerusakan",
       });
     }
 
     return report;
   };
 
-  const handleSubmit = async () => {
-    if (!categoryId || !title || !description) return Alert.alert('Validasi', 'Kategori, judul, dan deskripsi wajib diisi.');
-    setLoading(true);
-    try {
-      const report = await submitOnline();
-      Alert.alert('Berhasil', 'Laporan berhasil dibuat.');
-      navigation.replace('ReportDetail', { id: report.id });
-    } catch (error: any) {
-      await saveLocalReport({
+  const saveOffline = async () => {
+    await saveLocalReport(
+      {
         clientLocalId: `offline-${Date.now()}`,
         categoryId,
         buildingId: buildingId || undefined,
         roomId: roomId || undefined,
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim(),
         priority,
-        locationText,
+        locationText: locationText.trim() || undefined,
         latitude: coords.latitude,
         longitude: coords.longitude,
-      }, imageUri);
-      Alert.alert('Disimpan offline', 'Koneksi/API gagal. Laporan disimpan di Offline Queue untuk disync nanti.');
-      navigation.goBack();
+      },
+      asset?.uri || null
+    );
+  };
+
+  const handleSubmit = async () => {
+    if (loading) return;
+
+    setFieldErrors({});
+
+    if (!validateForm()) {
+      toast.error("Lengkapi data laporan terlebih dahulu");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const report = await submitOnline();
+
+      toast.success("Laporan berhasil dibuat");
+      navigation.replace("ReportDetail", { id: report.id });
+    } catch (error: any) {
+      console.log("CREATE REPORT ERROR STATUS:", error?.response?.status);
+      console.log("CREATE REPORT ERROR DATA:", error?.response?.data);
+
+      try {
+        await saveOffline();
+
+        toast.success("Koneksi/API gagal. Laporan disimpan di Offline Queue.");
+        navigation.goBack();
+      } catch (offlineError: any) {
+        toast.error(
+          getApiErrorMessage(
+            offlineError,
+            "Gagal membuat laporan dan gagal menyimpan offline"
+          )
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -122,29 +338,293 @@ const pickImage = async () => {
 
   return (
     <Screen>
-      <Input label="Judul" value={title} onChangeText={setTitle} placeholder="AC tidak dingin" />
-      <Input label="Deskripsi" value={description} onChangeText={setDescription} placeholder="Jelaskan kerusakan" multiline numberOfLines={4} />
-      <Text style={{ fontWeight: '900' }}>Kategori</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {categories.map((c) => <Pressable key={c.id} onPress={() => setCategoryId(c.id)}><Badge label={`${categoryId === c.id ? '✓ ' : ''}${c.name}`} /></Pressable>)}
+      <View style={styles.header}>
+        <Text style={styles.title}>Buat Laporan</Text>
+        <Text style={styles.subtitle}>
+          Laporkan kerusakan fasilitas kampus dengan kategori, lokasi, foto, dan
+          prioritas penanganan.
+        </Text>
       </View>
-      <Text style={{ fontWeight: '900' }}>Prioritas</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as ReportPriority[]).map((p) => <Pressable key={p} onPress={() => setPriority(p)}><Badge label={`${priority === p ? '✓ ' : ''}${p}`} /></Pressable>)}
-      </View>
-      <Text style={{ fontWeight: '900' }}>Gedung</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {buildings.map((b) => <Pressable key={b.id} onPress={() => setBuildingId(b.id)}><Badge label={`${buildingId === b.id ? '✓ ' : ''}${b.name}`} /></Pressable>)}
-      </View>
-      <Text style={{ fontWeight: '900' }}>Ruangan</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {rooms.map((r) => <Pressable key={r.id} onPress={() => setRoomId(r.id)}><Badge label={`${roomId === r.id ? '✓ ' : ''}${r.code}`} /></Pressable>)}
-      </View>
-      <Input label="Keterangan lokasi" value={locationText} onChangeText={setLocationText} placeholder="Gedung A, Lantai 1" />
-      <Button title="Gunakan Lokasi Saat Ini" variant="secondary" onPress={useCurrentLocation} />
-      <Button title="Pilih Foto Kerusakan" variant="secondary" onPress={pickImage} />
-      {imageUri ? <Card><Image source={{ uri: imageUri }} style={{ height: 180, borderRadius: 12 }} /></Card> : null}
-      <Button title="Kirim Laporan" loading={loading} onPress={handleSubmit} />
+
+      <Card>
+        <Text style={styles.sectionTitle}>Informasi Laporan</Text>
+
+        <ZodInput
+          name="title"
+          label="Judul"
+          value={title}
+          onChangeText={(value) => {
+            setTitle(value);
+            clearFieldError("title");
+          }}
+          placeholder="Contoh: AC tidak dingin"
+          errors={fieldErrors}
+          clearError={clearFieldError}
+          required
+        />
+
+        <ZodInput
+          name="description"
+          label="Deskripsi"
+          value={description}
+          onChangeText={(value) => {
+            setDescription(value);
+            clearFieldError("description");
+          }}
+          placeholder="Jelaskan kerusakan secara detail"
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+          style={{ minHeight: 100 }}
+          errors={fieldErrors}
+          clearError={clearFieldError}
+          required
+        />
+      </Card>
+
+      <Card>
+        <Text style={styles.sectionTitle}>Kategori dan Prioritas</Text>
+
+        <SelectorInput
+          label="Kategori"
+          placeholder="Cari dan pilih kategori laporan"
+          options={categories}
+          value={selectedCategory}
+          onSelect={(item) => {
+            setCategoryId(item.id);
+            clearFieldError("categoryId");
+          }}
+          getLabel={getCategoryLabel}
+          getValue={getCategoryValue}
+          getDescription={getCategoryDescription}
+          error={getFirstError(fieldErrors, "categoryId")}
+          emptyText="Kategori tidak ditemukan"
+        />
+
+        <SelectorInput
+          label="Prioritas"
+          placeholder="Cari dan pilih prioritas"
+          options={PRIORITY_OPTIONS}
+          value={selectedPriority}
+          onSelect={(item) => setPriority(item.value)}
+          getLabel={getPriorityLabel}
+          getValue={getPriorityValue}
+          getDescription={getPriorityDescription}
+          emptyText="Prioritas tidak ditemukan"
+        />
+      </Card>
+
+      <Card>
+        <Text style={styles.sectionTitle}>Lokasi</Text>
+
+        <SelectorInput
+          label="Gedung"
+          placeholder="Cari dan pilih gedung, opsional"
+          options={buildings}
+          value={selectedBuilding}
+          onSelect={(item) => {
+            setBuildingId(item.id);
+            setRoomId("");
+          }}
+          getLabel={getBuildingLabel}
+          getValue={getBuildingValue}
+          getDescription={getBuildingDescription}
+          emptyText="Gedung tidak ditemukan"
+        />
+
+        <SelectorInput
+          label="Ruangan"
+          placeholder={
+            buildingId
+              ? "Cari dan pilih ruangan, opsional"
+              : "Pilih gedung terlebih dahulu"
+          }
+          options={rooms}
+          value={selectedRoom}
+          onSelect={(item) => setRoomId(item.id)}
+          getLabel={getRoomLabel}
+          getValue={getRoomValue}
+          getDescription={getRoomDescription}
+          disabled={!buildingId}
+          emptyText="Ruangan tidak ditemukan"
+        />
+
+        <ZodInput
+          name="locationText"
+          label="Keterangan Lokasi"
+          value={locationText}
+          onChangeText={(value) => {
+            setLocationText(value);
+            clearFieldError("locationText");
+          }}
+          placeholder="Contoh: Gedung A, lantai 1, dekat ruang dosen"
+          errors={fieldErrors}
+          clearError={clearFieldError}
+        />
+
+        <View style={styles.locationSummary}>
+          <Text style={styles.summaryText}>
+            Gedung: {selectedBuilding?.name || "-"}
+          </Text>
+          <Text style={styles.summaryText}>
+            Ruangan:{" "}
+            {selectedRoom
+              ? selectedRoom.code
+                ? `${selectedRoom.code} - ${selectedRoom.name}`
+                : selectedRoom.name
+              : "-"}
+          </Text>
+          <Text style={styles.summaryText}>
+            GPS:{" "}
+            {coords.latitude && coords.longitude
+              ? `${coords.latitude}, ${coords.longitude}`
+              : "-"}
+          </Text>
+        </View>
+
+        <Button
+          title="Gunakan Lokasi Saat Ini"
+          variant="secondary"
+          onPress={useCurrentLocation}
+        />
+      </Card>
+
+      <Card>
+        <Text style={styles.sectionTitle}>Foto Kerusakan</Text>
+        <Text style={styles.helperText}>
+          Foto bersifat opsional, tetapi sangat membantu teknisi memahami kondisi
+          kerusakan.
+        </Text>
+
+        <View style={styles.photoActions}>
+          <Button
+            title={asset ? "Ganti Foto" : "Pilih Foto Kerusakan"}
+            variant="secondary"
+            onPress={pickImage}
+          />
+
+          {asset ? (
+            <Button title="Hapus Foto" variant="danger" onPress={removeImage} />
+          ) : null}
+        </View>
+
+        {asset?.uri ? (
+          <View style={styles.imagePreviewWrap}>
+            <Image
+              source={{ uri: asset.uri }}
+              style={styles.imagePreview}
+              resizeMode="cover"
+            />
+
+            <View style={styles.fileInfo}>
+              <Text style={styles.fileName}>
+                {asset.fileName || "Foto kerusakan"}
+              </Text>
+              <Text style={styles.fileMeta}>
+                {asset.mimeType || "image/jpeg"}
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.emptyPhoto}>
+            <Text style={styles.emptyPhotoText}>Belum ada foto dipilih.</Text>
+          </View>
+        )}
+      </Card>
+
+      <Button
+        title="Kirim Laporan"
+        loading={loading}
+        disabled={loading}
+        onPress={handleSubmit}
+      />
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "900",
+    color: "#0F172A",
+  },
+  subtitle: {
+    marginTop: 4,
+    fontSize: 14,
+    color: "#64748B",
+    lineHeight: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#0F172A",
+    marginBottom: 12,
+  },
+  helperText: {
+    color: "#64748B",
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  locationSummary: {
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 12,
+    gap: 4,
+  },
+  summaryText: {
+    color: "#475569",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  photoActions: {
+    gap: 10,
+    marginBottom: 12,
+  },
+  imagePreviewWrap: {
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    backgroundColor: "#FFFFFF",
+  },
+  imagePreview: {
+    height: 200,
+    width: "100%",
+  },
+  fileInfo: {
+    padding: 10,
+  },
+  fileName: {
+    fontSize: 13,
+    color: "#0F172A",
+    fontWeight: "900",
+  },
+  fileMeta: {
+    marginTop: 2,
+    fontSize: 12,
+    color: "#64748B",
+    fontWeight: "600",
+  },
+  emptyPhoto: {
+    minHeight: 130,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "#CBD5E1",
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8FAFC",
+  },
+  emptyPhotoText: {
+    color: "#64748B",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+});

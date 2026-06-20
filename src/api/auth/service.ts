@@ -36,7 +36,7 @@ export const authService = {
 
     return auth;
   },
-
+// this stuff wont be used btw
   async register(payload: RegisterPayload) {
     const response = await publicClient.post<ApiResponse<User>>(
       "/api/auth/register",
@@ -45,6 +45,14 @@ export const authService = {
 
     return response.data.data;
   },
+
+  async getUserById(id: string) {
+  const response = await privateClient.get(`/api/auth/users/${id}`);
+
+  const data = response.data?.data ?? response.data;
+
+  return Array.isArray(data) ? data[0] : data;
+},
 
   async me() {
     const response = await privateClient.get("/api/auth/verify");
