@@ -15,10 +15,11 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Loading } from "@/components/ui/Loading";
-
 import { useAuth } from "@/api/auth/hooks";
 import { authService } from "@/api/auth/service";
 import { User } from "@/api/auth/types";
+import { getReportFeedback} from "@/api/feedback/service";
+import { ReportFeedback } from "@/api/feedback/types";
 import { useReports } from "@/api/reports/hooks";
 import { mediaService } from "@/api/media/service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -271,8 +272,34 @@ function getUserDisplayName(user?: User | null) {
 
   return user.name || user.username || user.email || null;
 }
+
+
+function getFeedbackComment(feedback?: ReportFeedback | null) {
+  if (!feedback) return "-";
+
+  return feedback.comment?.trim() || "-";
+}
+
+function getRatingStars(rating?: number | null) {
+  const numericRating = Number(rating || 0);
+
+  const safeRating = Math.max(
+    0,
+    Math.min(5, Math.round(Number.isNaN(numericRating) ? 0 : numericRating))
+  );
+
+  const fullStars = "★".repeat(safeRating);
+  const emptyStars = "☆".repeat(5 - safeRating);
+
+  return `${fullStars}${emptyStars}`;
+}
+
 export function ReportDetailScreen({ route, navigation }: Props) {
   const { id } = route.params;
+  // feedback
+  const [feedback, setFeedback] = useState<ReportFeedback | null>(null);
+const [feedbackLoading, setFeedbackLoading] = useState(false);
+const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
   const { user } = useAuth();
   const { selected, fetchReportDetail } = useReports();
@@ -384,7 +411,9 @@ useEffect(() => {
   const reporterId = getReporterId(selected);
   const technicianId = getTechnicianId(selected);
 
-  const ids = [reporterId, technicianId]
+const feedbackUserId = (selected as any).feedback?.userId || feedback?.userId || null;
+
+const ids = [reporterId, technicianId, feedbackUserId]
     .filter(Boolean)
     .filter((value, index, array) => array.indexOf(value) === index)
     .filter((id) => !usersById[id as string]) as string[];
@@ -435,7 +464,47 @@ useEffect(() => {
   return () => {
     alive = false;
   };
-}, [selected, usersById]);
+}, [selected?.id, feedback?.userId, usersById]);
+
+useEffect(() => {
+  if (!selected || selected.id !== id) return;
+
+  let alive = true;
+
+  const fetchFeedback = async () => {
+    try {
+      setFeedbackLoading(true);
+      setFeedbackError(null);
+      setFeedback(null);
+
+      const data = await getReportFeedback(id);
+
+      if (!alive) return;
+
+      setFeedback(data);
+    } catch (error: any) {
+      if (!alive) return;
+
+      // console.log("FETCH REPORT FEEDBACK FAILED:", error);
+
+      setFeedback(null);
+      setFeedbackError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Gagal mengambil feedback laporan."
+      );
+    } finally {
+      if (alive) setFeedbackLoading(false);
+    }
+  };
+
+  void fetchFeedback();
+
+  return () => {
+    alive = false;
+  };
+}, [selected?.id, id]);
+
   const mergedMediaItems = useMemo(() => {
     return mediaItems.map((item: any) => {
       const mediaId = getReportMediaId(item);
@@ -470,17 +539,18 @@ useEffect(() => {
     return <Loading text="Mengambil detail laporan..." />;
   }
 
-  const isAdmin = user?.role === "ADMIN";
-  const isTechnician = user?.role === "TECHNICIAN";
-  const isReporter = user?.id_user === selected.reporterId;
+const isAdmin = user?.role === "ADMIN";
+const isTechnician = user?.role === "TECHNICIAN";
 
+const reporterId = getReporterId(selected);
+const technicianId = getTechnicianId(selected);
+
+const isReporter = user?.id_user === reporterId;
 
 const buildingName = getBuildingDisplay(selected);
 const roomName = getRoomDisplay(selected);
 const coordinateText = getCoordinateDisplay(selected);
 
-const reporterId = getReporterId(selected);
-const technicianId = getTechnicianId(selected);
 
 const reporterName =
   (selected as any).user?.name ||
@@ -494,7 +564,12 @@ const technicianName =
   (selected as any).technician?.name ||
   getUserDisplayName(technicianId ? usersById[technicianId] : null) ||
   (technicianId ? (usersLoading ? "Memuat..." : `ID: ${technicianId}`) : "-");
+const feedbackData = (selected as any).feedback || feedback;
+const feedbackUserId = feedbackData?.userId;
 
+const feedbackUserName =
+  getUserDisplayName(feedbackUserId ? usersById[feedbackUserId] : null) ||
+  (feedbackUserId ? (usersLoading ? "Memuat..." : `ID: ${feedbackUserId}`) : "-");
   return (
     <Screen>
       <Card>
@@ -671,6 +746,54 @@ const technicianName =
         </Card>
       ) : null}
 
+      <Card>
+  <Text style={styles.sectionTitle}>Feedback Laporan</Text>
+
+  {feedbackLoading ? (
+    <Text style={styles.mutedText}>Memuat feedback laporan...</Text>
+  ) : null}
+
+  {feedbackError ? (
+    <View style={styles.dangerBox}>
+      <Text style={styles.dangerText}>{feedbackError}</Text>
+    </View>
+  ) : null}
+
+  {!feedbackLoading && !feedbackError && feedbackData ? (
+    <View style={styles.feedbackBox}>
+      <View style={styles.feedbackHeader}>
+        <Text style={styles.feedbackStars}>
+          {getRatingStars(feedbackData.rating)}
+        </Text>
+
+        <Text style={styles.feedbackRating}>
+          {feedbackData.rating}/5
+        </Text>
+      </View>
+
+    <View style={styles.feedbackMetaBox}>
+      <Text style={styles.feedbackMetaLabel}>Diberikan oleh</Text>
+      <Text style={styles.feedbackMetaValue}>{feedbackUserName}</Text>
+    </View>
+
+
+      <Text style={styles.feedbackComment}>
+  {getFeedbackComment(feedbackData)}
+</Text>
+
+      <Text style={styles.feedbackDate}>
+        Diberikan pada: {formatDateTime(feedbackData.createdAt)}
+      </Text>
+    </View>
+  ) : null}
+
+  {!feedbackLoading && !feedbackError && !feedbackData ? (
+    <Text style={styles.mutedText}>
+      Feedback belum tersedia untuk laporan ini.
+    </Text>
+  ) : null}
+</Card>
+
       <View style={styles.actionGroup}>
         {isAdmin && selected.status === "PENDING" ? (
           <Button
@@ -719,12 +842,15 @@ const technicianName =
   />
 ) : null}
 
-        {isReporter && selected.status === "RESOLVED" && !selected.feedback ? (
-          <Button
-            title="Beri Feedback"
-            onPress={() => navigation.navigate("Feedback", { id })}
-          />
-        ) : null}
+     {isReporter &&
+selected.status === "RESOLVED" &&
+!feedbackLoading &&
+!feedbackData ? (
+  <Button
+    title="Beri Feedback"
+    onPress={() => navigation.navigate("Feedback", { id })}
+  />
+) : null}
 
         {selected.status === "CANCELLED" ? (
           <Button
@@ -952,4 +1078,59 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 420,
   },
+
+  feedbackBox: {
+  backgroundColor: "#F8FAFC",
+  borderWidth: 1,
+  borderColor: "#E2E8F0",
+  borderRadius: 14,
+  padding: 12,
+},
+feedbackHeader: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: 8,
+},
+feedbackStars: {
+  fontSize: 20,
+  color: "#F59E0B",
+  fontWeight: "900",
+},
+feedbackRating: {
+  fontSize: 13,
+  color: "#0F172A",
+  fontWeight: "900",
+},
+feedbackComment: {
+  fontSize: 13,
+  color: "#334155",
+  lineHeight: 19,
+  fontWeight: "700",
+},
+feedbackDate: {
+  marginTop: 8,
+  fontSize: 12,
+  color: "#64748B",
+  fontWeight: "700",
+},
+feedbackMetaBox: {
+  backgroundColor: "#FFFFFF",
+  borderWidth: 1,
+  borderColor: "#E2E8F0",
+  borderRadius: 12,
+  padding: 10,
+  marginBottom: 10,
+},
+feedbackMetaLabel: {
+  fontSize: 11,
+  color: "#64748B",
+  fontWeight: "800",
+  marginBottom: 3,
+},
+feedbackMetaValue: {
+  fontSize: 13,
+  color: "#0F172A",
+  fontWeight: "900",
+},
 });

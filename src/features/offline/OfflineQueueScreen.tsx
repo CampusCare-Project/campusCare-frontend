@@ -221,7 +221,7 @@ const { buildings, rooms } = useLocations(true);
   return (
     <DashboardLayout title="Offline Queue">
       <View style={styles.header}>
-        <Text style={styles.title}>Offline Queue</Text>
+        {/* <Text style={styles.title}>Offline Queue</Text> */}
         <Text style={styles.subtitle}>
           Laporan yang gagal dikirim saat offline/API error akan disimpan di sini
           dan bisa disinkronkan ulang.
