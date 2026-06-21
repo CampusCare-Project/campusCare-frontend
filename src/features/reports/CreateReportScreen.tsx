@@ -15,7 +15,14 @@ import { useLocations } from "@/api/locations/hooks";
 import { reportService } from "@/api/reports/service";
 import { mediaService } from "@/api/media/service";
 
-import { saveLocalReport } from "@/offline/db";
+import { saveLocalReport,
+   cacheCategories,
+  cacheBuildings,
+  cacheRooms,
+  listCachedCategories,
+  listCachedBuildings,
+  listCachedRooms,
+ } from "@/offline/db";
 
 import type { RootStackParamList } from "@/app/router";
 import type { ReportPriority } from "@/api/reports/types";
@@ -71,6 +78,60 @@ export function CreateReportScreen({ navigation }: Props) {
   const [description, setDescription] = useState("");
   const [locationText, setLocationText] = useState("");
 
+  // for dropdown if offline i guess
+const [cachedCategories, setCachedCategories] = useState<any[]>([]);
+const [cachedBuildings, setCachedBuildings] = useState<any[]>([]);
+const [cachedRooms, setCachedRooms] = useState<any[]>([]);
+useEffect(() => {
+  const loadCachedMasterData = async () => {
+    const [localCategories, localBuildings, localRooms] = await Promise.all([
+      listCachedCategories(),
+      listCachedBuildings(),
+      listCachedRooms(),
+    ]);
+
+    setCachedCategories(localCategories);
+    setCachedBuildings(localBuildings);
+    setCachedRooms(localRooms);
+  };
+
+  void loadCachedMasterData();
+}, []);
+
+useEffect(() => {
+  if (categories.length > 0) {
+    void cacheCategories(categories);
+    setCachedCategories(categories);
+  }
+}, [categories]);
+
+useEffect(() => {
+  if (buildings.length > 0) {
+    void cacheBuildings(buildings);
+    setCachedBuildings(buildings);
+  }
+}, [buildings]);
+
+useEffect(() => {
+  if (rooms.length > 0) {
+    void cacheRooms(rooms);
+    setCachedRooms(rooms);
+  }
+}, [rooms]);
+
+const categoryOptions = categories.length > 0 ? categories : cachedCategories;
+const buildingOptions = buildings.length > 0 ? buildings : cachedBuildings;
+const roomSource = rooms.length > 0 ? rooms : cachedRooms;
+
+const roomOptions = roomSource.filter((room: any) => {
+  const roomBuildingId =
+    room.buildingId ||
+    room.building?.id ||
+    room.id_building;
+
+  return roomBuildingId === buildingId;
+});
+
   const [coords, setCoords] = useState<{
     latitude?: number;
     longitude?: number;
@@ -104,6 +165,9 @@ export function CreateReportScreen({ navigation }: Props) {
       PRIORITY_OPTIONS[1]
     );
   }, [priority]);
+
+  // for offline snapshot
+  
 
   const getCategoryLabel = useCallback((item: any) => {
     return item.name;
@@ -279,23 +343,47 @@ export function CreateReportScreen({ navigation }: Props) {
     return report;
   };
 
-  const saveOffline = async () => {
-    await saveLocalReport(
-      {
-        clientLocalId: `offline-${Date.now()}`,
-        categoryId,
-        buildingId: buildingId || undefined,
-        roomId: roomId || undefined,
-        title: title.trim(),
-        description: description.trim(),
-        priority,
-        locationText: locationText.trim() || undefined,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-      },
-      asset?.uri || null
-    );
-  };
+const getRoomNameSnapshot = () => {
+  if (!selectedRoom) return undefined;
+
+  if (selectedRoom.code && selectedRoom.name) {
+    return `${selectedRoom.code} - ${selectedRoom.name}`;
+  }
+
+  return selectedRoom.name || selectedRoom.code || undefined;
+};
+
+const saveOffline = async () => {
+  const selectedCategory = categoryOptions.find((item) => item.id === categoryId);
+const selectedBuilding = buildingOptions.find((item) => item.id === buildingId);
+const selectedRoom = roomOptions.find((item) => item.id === roomId);
+
+await saveLocalReport(
+  {
+    clientLocalId: `offline-${Date.now()}`,
+
+    categoryId,
+    categoryName: selectedCategory?.name,
+
+    buildingId,
+    buildingName: selectedBuilding?.name,
+
+    roomId,
+    roomName:
+      selectedRoom?.code && selectedRoom?.name
+        ? `${selectedRoom.code} - ${selectedRoom.name}`
+        : selectedRoom?.name || selectedRoom?.code,
+
+    title: title.trim(),
+    description: description.trim(),
+    priority,
+    locationText: locationText.trim() || undefined,
+    latitude: coords.latitude,
+    longitude: coords.longitude,
+  },
+  asset?.uri || null
+);
+};
 
   const handleSubmit = async () => {
     if (loading) return;
@@ -388,8 +476,8 @@ export function CreateReportScreen({ navigation }: Props) {
         <SelectorInput
           label="Kategori"
           placeholder="Cari dan pilih kategori laporan"
-          options={categories}
-          value={selectedCategory}
+          options={categoryOptions}
+          value={categoryOptions.find((item) => item.id === categoryId) ?? null}
           onSelect={(item) => {
             setCategoryId(item.id);
             clearFieldError("categoryId");
@@ -420,8 +508,8 @@ export function CreateReportScreen({ navigation }: Props) {
         <SelectorInput
           label="Gedung"
           placeholder="Cari dan pilih gedung, opsional"
-          options={buildings}
-          value={selectedBuilding}
+          options={buildingOptions}
+          value={buildingOptions.find((item) => item.id === buildingId) ?? null}
           onSelect={(item) => {
             setBuildingId(item.id);
             setRoomId("");
@@ -439,8 +527,8 @@ export function CreateReportScreen({ navigation }: Props) {
               ? "Cari dan pilih ruangan, opsional"
               : "Pilih gedung terlebih dahulu"
           }
-          options={rooms}
-          value={selectedRoom}
+          options={roomOptions}
+          value={roomOptions.find((item) => item.id === roomId) ?? null}
           onSelect={(item) => setRoomId(item.id)}
           getLabel={getRoomLabel}
           getValue={getRoomValue}
