@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { toast } from "sonner-native";
@@ -14,7 +13,10 @@ import { useCategories } from "@/api/categories/hooks";
 import { useLocations } from "@/api/locations/hooks";
 import { reportService } from "@/api/reports/service";
 import { mediaService } from "@/api/media/service";
-
+import {
+  AttachmentPicker,
+  type PickedAttachment,
+} from "@/components/ui/AttachmentPicker";
 import { saveLocalReport,
    cacheCategories,
   cacheBuildings,
@@ -77,7 +79,7 @@ export function CreateReportScreen({ navigation }: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [locationText, setLocationText] = useState("");
-
+const [attachments, setAttachments] = useState<PickedAttachment[]>([]);
   // for dropdown if offline i guess
 const [cachedCategories, setCachedCategories] = useState<any[]>([]);
 const [cachedBuildings, setCachedBuildings] = useState<any[]>([]);
@@ -137,7 +139,7 @@ const roomOptions = roomSource.filter((room: any) => {
     longitude?: number;
   }>({});
 
-  const [asset, setAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  // const [asset, setAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [fieldErrors, setFieldErrors] = useState<ZodFieldErrors>({});
   const [loading, setLoading] = useState(false);
 
@@ -250,34 +252,7 @@ const roomOptions = roomSource.filter((room: any) => {
     return Object.keys(errors).length === 0;
   };
 
-  const pickImage = async () => {
-    try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (!permission.granted) {
-        toast.error("Izin akses galeri diperlukan untuk memilih foto.");
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        quality: 0.75,
-      });
-
-      if (!result.canceled && result.assets?.[0]) {
-        setAsset(result.assets[0]);
-        toast.success("Foto kerusakan berhasil dipilih");
-      }
-    } catch (error: any) {
-      toast.error(getApiErrorMessage(error, "Gagal memilih foto"));
-    }
-  };
-
-  const removeImage = () => {
-    setAsset(null);
-    toast.success("Foto dihapus dari pilihan");
-  };
-
+ 
   const useCurrentLocation = async () => {
     try {
       const permission = await Location.requestForegroundPermissionsAsync();
@@ -306,42 +281,48 @@ const roomOptions = roomSource.filter((room: any) => {
     }
   };
 
-  const submitOnline = async () => {
-    const payload = {
-      clientLocalId: `mobile-${Date.now()}`,
-      categoryId,
-      buildingId: buildingId || undefined,
-      roomId: roomId || undefined,
-      title: title.trim(),
-      description: description.trim(),
-      priority,
-      locationText: locationText.trim() || undefined,
-      latitude: coords.latitude,
-      longitude: coords.longitude,
-    };
-
-    const report = await reportService.create(payload);
-
-    if (asset?.uri) {
-      const media = await mediaService.upload({
-        uri: asset.uri,
-        fileName: asset.fileName,
-        mimeType: asset.mimeType,
-        source: "GALLERY",
-        targetType: "REPORT",
-        targetId: report.id,
-        usageType: "REPORT_DAMAGE_PHOTO",
-      });
-
-      await reportService.addMedia(report.id, {
-        mediaId: media.id,
-        type: "DAMAGE_PHOTO",
-        caption: "Foto kondisi kerusakan",
-      });
-    }
-
-    return report;
+ const submitOnline = async () => {
+  const payload = {
+    clientLocalId: `mobile-${Date.now()}`,
+    categoryId,
+    buildingId: buildingId || undefined,
+    roomId: roomId || undefined,
+    title: title.trim(),
+    description: description.trim(),
+    priority,
+    locationText: locationText.trim() || undefined,
+    latitude: coords.latitude,
+    longitude: coords.longitude,
   };
+
+  const report = await reportService.create(payload);
+
+ for (const attachment of attachments) {
+  console.log("UPLOAD ATTACHMENT:", attachment);
+
+  const media = await mediaService.upload({
+    uri: attachment.uri,
+    fileName: attachment.name,
+    mimeType: attachment.mimeType,
+    source:
+      attachment.source === "camera"
+        ? "CAMERA"
+        : attachment.source === "gallery"
+        ? "GALLERY"
+        : "UPLOAD",
+    targetType: "REPORT",
+    targetId: report.id,
+    usageType: "REPORT_DAMAGE_PHOTO",
+  });
+
+  console.log("MEDIA UPLOADED:", media);
+
+  await reportService.addMedia(report.id, {
+    mediaId: media.id,
+    type: "DAMAGE_PHOTO",
+    caption: attachment.name || "Media laporan",
+  });
+}}
 
 const getRoomNameSnapshot = () => {
   if (!selectedRoom) return undefined;
@@ -381,48 +362,66 @@ await saveLocalReport(
     latitude: coords.latitude,
     longitude: coords.longitude,
   },
-  asset?.uri || null
+  attachments[0]?.uri || null
 );
 };
 
   const handleSubmit = async () => {
-    if (loading) return;
+  if (loading) return;
 
-    setFieldErrors({});
+  setFieldErrors({});
 
-    if (!validateForm()) {
-      toast.error("Lengkapi data laporan terlebih dahulu");
-      return;
-    }
+  if (!validateForm()) {
+    toast.error("Lengkapi data laporan terlebih dahulu");
+    return;
+  }
+
+  let createdReport: any = null;
+
+  try {
+    setLoading(true);
+
+    // HANYA API ONLINE DI SINI
+    createdReport = await submitOnline();
+  } catch (error: any) {
+    console.log("CREATE REPORT ERROR FULL:", error);
+    // console.log("CREATE REPORT ERROR MESSAGE:", error?.message);
+    // console.log("CREATE REPORT ERROR STATUS:", error?.response?.status);
+    // console.log("CREATE REPORT ERROR DATA:", error?.response?.data);
 
     try {
-      setLoading(true);
+      await saveOffline();
 
-      const report = await submitOnline();
-
-      toast.success("Laporan berhasil dibuat");
-      navigation.replace("ReportDetail", { id: report.id });
-    } catch (error: any) {
-      console.log("CREATE REPORT ERROR STATUS:", error?.response?.status);
-      console.log("CREATE REPORT ERROR DATA:", error?.response?.data);
-
-      try {
-        await saveOffline();
-
-        toast.success("Koneksi/API gagal. Laporan disimpan di Offline Queue.");
-        navigation.goBack();
-      } catch (offlineError: any) {
-        toast.error(
-          getApiErrorMessage(
-            offlineError,
-            "Gagal membuat laporan dan gagal menyimpan offline"
-          )
-        );
-      }
+      toast.success("Koneksi/API gagal. Laporan disimpan di Offline Queue.");
+      navigation.goBack();
+    } catch (offlineError: any) {
+      toast.error(
+        getApiErrorMessage(
+          offlineError,
+          "Gagal membuat laporan dan gagal menyimpan offline"
+        )
+      );
     } finally {
       setLoading(false);
     }
-  };
+
+    return;
+  }
+
+  setLoading(false);
+
+  const reportId = createdReport?.id;
+
+  if (!reportId) {
+    console.log("CREATED REPORT INVALID:", createdReport);
+    toast.error("Laporan dibuat, tetapi ID laporan tidak ditemukan.");
+    return;
+  }
+
+  toast.success("Laporan berhasil dibuat");
+
+  navigation.replace("ReportDetail", { id: reportId });
+};
 
   return (
     <Screen>
@@ -584,40 +583,15 @@ await saveLocalReport(
           kerusakan.
         </Text>
 
-        <View style={styles.photoActions}>
-          <Button
-            title={asset ? "Ganti Foto" : "Pilih Foto Kerusakan"}
-            variant="secondary"
-            onPress={pickImage}
-          />
+        <AttachmentPicker
+  label="Media Laporan"
+  helperText="Upload foto kerusakan dari kamera, galeri, atau file dari perangkat."
+  value={attachments}
+  onChange={setAttachments}
+  maxFiles={3}
+/>
 
-          {asset ? (
-            <Button title="Hapus Foto" variant="danger" onPress={removeImage} />
-          ) : null}
-        </View>
-
-        {asset?.uri ? (
-          <View style={styles.imagePreviewWrap}>
-            <Image
-              source={{ uri: asset.uri }}
-              style={styles.imagePreview}
-              resizeMode="cover"
-            />
-
-            <View style={styles.fileInfo}>
-              <Text style={styles.fileName}>
-                {asset.fileName || "Foto kerusakan"}
-              </Text>
-              <Text style={styles.fileMeta}>
-                {asset.mimeType || "image/jpeg"}
-              </Text>
-            </View>
-          </View>
-        ) : (
-          <View style={styles.emptyPhoto}>
-            <Text style={styles.emptyPhotoText}>Belum ada foto dipilih.</Text>
-          </View>
-        )}
+       
       </Card>
 
       <Button
@@ -714,5 +688,4 @@ const styles = StyleSheet.create({
     color: "#64748B",
     fontWeight: "700",
     fontSize: 13,
-  },
-});
+  }})

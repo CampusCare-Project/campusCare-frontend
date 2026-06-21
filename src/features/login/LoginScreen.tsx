@@ -146,7 +146,7 @@ export function LoginScreen({ navigation }: Props) {
         disabled={submitting}
       />
 
-      <View style={styles.footer}>
+      {/* <View style={styles.footer}>
         <Text style={styles.footerText}>Belum punya akun?</Text>
 
         <Pressable
@@ -155,7 +155,7 @@ export function LoginScreen({ navigation }: Props) {
         >
           <Text style={styles.registerText}>Register</Text>
         </Pressable>
-      </View>
+      </View> */}
     </AuthLayout>
   );
 }

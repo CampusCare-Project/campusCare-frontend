@@ -1,6 +1,12 @@
 import { privateClient } from '@/api/client';
 import type { ApiResponse } from '@/types/common';
-import type { MediaAsset,  UploadMediaInput} from './types';
+import type {
+  MediaAsset,
+  MediaSource,
+  MediaTargetType,
+  MediaUsageType,
+  UploadMediaInput,
+} from "./types";
 import { Platform } from "react-native";
 
 function getFileNameFromUri(uri: string) {
@@ -11,16 +17,56 @@ function getFileNameFromUri(uri: string) {
 }
 
 function getMimeTypeFromFileName(fileName: string) {
-  const ext = fileName.split(".").pop()?.toLowerCase();
+   const ext = fileName.split(".").pop()?.toLowerCase();
 
+  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
   if (ext === "png") return "image/png";
   if (ext === "webp") return "image/webp";
-  if (ext === "pdf") return "application/pdf";
-  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+  if (ext === "heic") return "image/heic";
 
-  return "image/jpeg";
+  if (ext === "pdf") return "application/pdf";
+  if (ext === "txt") return "text/plain";
+  if (ext === "csv") return "text/csv";
+
+  if (ext === "doc") return "application/msword";
+  if (ext === "docx") {
+    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  }
+
+  if (ext === "xls") return "application/vnd.ms-excel";
+  if (ext === "xlsx") {
+    return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  }
+
+  if (ext === "ppt") return "application/vnd.ms-powerpoint";
+  if (ext === "pptx") {
+    return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+  }
+
+  return "application/octet-stream";
 }
 
+type UploadableAttachment = {
+  uri: string;
+  name?: string;
+  fileName?: string;
+  mimeType?: string;
+  source?: "camera" | "gallery" | "document" | MediaSource;
+};
+
+function mapAttachmentSourceToMediaSource(
+  source?: UploadableAttachment["source"]
+): MediaSource {
+  if (source === "camera") return "CAMERA";
+  if (source === "gallery") return "GALLERY";
+  if (source === "document") return "UPLOAD";
+
+  if (source === "CAMERA") return "CAMERA";
+  if (source === "GALLERY") return "GALLERY";
+  if (source === "UPLOAD") return "UPLOAD";
+
+  return "UPLOAD";
+}
 async function appendFileToFormData(
   formData: FormData,
   input: UploadMediaInput
@@ -94,4 +140,43 @@ export const mediaService = {
 
     return response.data.data;
   },
+
+  async uploadAttachment(
+  attachment: UploadableAttachment,
+  options: {
+    source?: MediaSource;
+    targetType?: MediaTargetType;
+    targetId?: string;
+    usageType?: MediaUsageType;
+  }
+) {
+  return this.upload({
+    uri: attachment.uri,
+    fileName: attachment.fileName || attachment.name,
+    mimeType: attachment.mimeType,
+    source: options.source || mapAttachmentSourceToMediaSource(attachment.source),
+    targetType: options.targetType,
+    targetId: options.targetId,
+    usageType: options.usageType,
+  });
+},
+
+async uploadMany(
+  attachments: UploadableAttachment[],
+  options: {
+    source?: MediaSource;
+    targetType?: MediaTargetType;
+    targetId?: string;
+    usageType?: MediaUsageType;
+  }
+) {
+  const results: MediaAsset[] = [];
+
+  for (const attachment of attachments) {
+    const uploaded = await this.uploadAttachment(attachment, options);
+    results.push(uploaded);
+  }
+
+  return results;
+},
 };

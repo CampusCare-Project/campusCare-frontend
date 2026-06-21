@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState,useCallback } from "react";
 import {
   Alert,
   Image,
@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useFocusEffect } from "@react-navigation/native";
 
 import { Screen } from "@/components/ui/Screen";
 import { Badge } from "@/components/ui/Badge";
@@ -321,9 +322,13 @@ useEffect(() => {
   void loadToken();
 }, []);
 
-  useEffect(() => {
+ useFocusEffect(
+  useCallback(() => {
     void fetchReportDetail(id);
-  }, [id]);
+
+    return undefined;
+  }, [id])
+);
 
   useEffect(() => {
     setMediaAssetsById({});

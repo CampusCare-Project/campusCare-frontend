@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
-
+import { useFocusEffect } from "@react-navigation/native";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -160,10 +160,13 @@ export function ReportListScreen({ navigation }: Props) {
   const [endDate, setEndDate] = useState("");
 const [usersById, setUsersById] = useState<Record<string, User>>({});
 const [usersLoading, setUsersLoading] = useState(false);
-  useEffect(() => {
+useFocusEffect(
+  useCallback(() => {
     void fetchReports({ limit: 50 });
-  }, []);
 
+    return undefined;
+  }, [])
+);
   
 useEffect(() => {
   if (!items.length) return;

@@ -1,12 +1,10 @@
 import { useState } from "react";
 import {
-  Image,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { toast } from "sonner-native";
 
@@ -14,6 +12,10 @@ import { Screen } from "@/components/ui/Screen";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
+import {
+  AttachmentPicker,
+  type PickedAttachment,
+} from "@/components/ui/AttachmentPicker";
 
 import { mediaService } from "@/api/media/service";
 import { reportService } from "@/api/reports/service";
@@ -53,6 +55,13 @@ function getMediaLabel(type: ReportMediaType) {
   return "Bukti Tambahan";
 }
 
+function getUploadSource(source: PickedAttachment["source"]) {
+  if (source === "camera") return "CAMERA";
+  if (source === "gallery") return "GALLERY";
+
+  return "UPLOAD";
+}
+
 export function UploadMediaScreen({ route, navigation }: Props) {
   const { reportId, mediaType } = route.params;
 
@@ -60,43 +69,14 @@ export function UploadMediaScreen({ route, navigation }: Props) {
     mediaType || "DAMAGE_PHOTO"
   );
   const [caption, setCaption] = useState("");
-  const [asset, setAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [attachments, setAttachments] = useState<PickedAttachment[]>([]);
   const [loading, setLoading] = useState(false);
-
-  const pick = async () => {
-    try {
-      const permission =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (!permission.granted) {
-        toast.error("Izin akses galeri diperlukan untuk memilih foto.");
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        quality: 0.75,
-      });
-
-      if (!result.canceled && result.assets?.[0]) {
-        setAsset(result.assets[0]);
-        toast.success("Foto berhasil dipilih");
-      }
-    } catch (e: any) {
-      toast.error(getApiErrorMessage(e, "Gagal memilih foto"));
-    }
-  };
-
-  const removeImage = () => {
-    setAsset(null);
-    toast.success("Foto dihapus dari pilihan");
-  };
 
   const submit = async () => {
     if (loading) return;
 
-    if (!asset?.uri) {
-      toast.error("Pilih foto terlebih dahulu");
+    if (attachments.length === 0) {
+      toast.error("Pilih foto atau file terlebih dahulu");
       return;
     }
 
@@ -105,25 +85,36 @@ export function UploadMediaScreen({ route, navigation }: Props) {
 
       const usageType = getUsageType(type);
 
-      const media = await mediaService.upload({
-        uri: asset.uri,
-        fileName: asset.fileName,
-        mimeType: asset.mimeType,
-        source: "GALLERY",
-        targetType: "REPORT",
-        targetId: reportId,
-        usageType,
-      });
+      for (const attachment of attachments) {
+        console.log("UPLOAD MEDIA ATTACHMENT:", attachment);
 
-      await reportService.addMedia(reportId, {
-        mediaId: media.id,
-        type,
-        caption: caption.trim() || undefined,
-      });
+        const media = await mediaService.upload({
+          uri: attachment.uri,
+          fileName: attachment.name,
+          mimeType: attachment.mimeType,
+          source: getUploadSource(attachment.source),
+          targetType: "REPORT",
+          targetId: reportId,
+          usageType,
+        });
+
+        console.log("UPLOAD MEDIA RESULT:", media);
+
+        await reportService.addMedia(reportId, {
+          mediaId: media.id,
+          type,
+          caption:
+            caption.trim() ||
+            attachment.name ||
+            getMediaLabel(type),
+        });
+      }
 
       toast.success("Media berhasil diupload dan ditempel ke laporan");
       navigation.goBack();
     } catch (e: any) {
+      console.log("UPLOAD ERROR FULL:", e);
+      console.log("UPLOAD ERROR MESSAGE:", e?.message);
       console.log("UPLOAD ERROR STATUS:", e?.response?.status);
       console.log("UPLOAD ERROR DATA:", e?.response?.data);
 
@@ -139,7 +130,7 @@ export function UploadMediaScreen({ route, navigation }: Props) {
         <Text style={styles.title}>Upload Media</Text>
         <Text style={styles.subtitle}>
           Upload foto kerusakan, bukti perbaikan, atau bukti tambahan untuk
-          laporan.
+          laporan. Bisa dari kamera, galeri, atau file perangkat.
         </Text>
       </View>
 
@@ -155,6 +146,7 @@ export function UploadMediaScreen({ route, navigation }: Props) {
                 key={item}
                 onPress={() => setType(item)}
                 style={styles.badgePressable}
+                disabled={loading}
               >
                 <Badge
                   label={`${active ? "✓ " : ""}${getMediaLabel(item)}`}
@@ -174,48 +166,23 @@ export function UploadMediaScreen({ route, navigation }: Props) {
         numberOfLines={3}
       />
 
-      <View style={styles.pickRow}>
-        <Button
-          title={asset ? "Ganti Foto" : "Pilih Foto"}
-          variant="secondary"
-          onPress={pick}
-        />
-
-        {asset ? (
-          <Button
-            title="Hapus"
-            variant="danger"
-            onPress={removeImage}
-          />
-        ) : null}
-      </View>
-
-      {asset?.uri ? (
-        <View style={styles.previewCard}>
-          <Image
-            source={{ uri: asset.uri }}
-            style={styles.previewImage}
-            resizeMode="cover"
-          />
-
-          <View style={styles.fileInfo}>
-            <Text style={styles.fileName}>
-              {asset.fileName || "Foto dipilih"}
-            </Text>
-            <Text style={styles.fileMeta}>
-              {asset.mimeType || "image/jpeg"}
-            </Text>
-          </View>
-        </View>
-      ) : (
-        <View style={styles.emptyPreview}>
-          <Text style={styles.emptyText}>Belum ada foto yang dipilih.</Text>
-        </View>
-      )}
+      <AttachmentPicker
+        label="Lampiran Media"
+        helperText="Maksimal 3 lampiran. Bisa ambil foto dari kamera, pilih gambar dari galeri, atau pilih file dari perangkat."
+        value={attachments}
+        onChange={setAttachments}
+        maxFiles={3}
+        disabled={loading}
+      />
 
       <Button
-        title="Upload Media"
+        title={
+          attachments.length > 0
+            ? `Upload ${attachments.length} Media`
+            : "Upload Media"
+        }
         loading={loading}
+        disabled={loading}
         onPress={submit}
       />
     </Screen>
@@ -253,52 +220,5 @@ const styles = StyleSheet.create({
   },
   badgePressable: {
     marginBottom: 4,
-  },
-  pickRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 4,
-    marginBottom: 14,
-  },
-  previewCard: {
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    overflow: "hidden",
-    marginBottom: 16,
-  },
-  previewImage: {
-    width: "100%",
-    height: 220,
-  },
-  fileInfo: {
-    padding: 12,
-  },
-  fileName: {
-    fontSize: 13,
-    fontWeight: "900",
-    color: "#0F172A",
-  },
-  fileMeta: {
-    marginTop: 3,
-    fontSize: 12,
-    color: "#64748B",
-  },
-  emptyPreview: {
-    minHeight: 140,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: "#CBD5E1",
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
-    backgroundColor: "#F8FAFC",
-  },
-  emptyText: {
-    fontSize: 13,
-    color: "#64748B",
-    fontWeight: "700",
   },
 });
