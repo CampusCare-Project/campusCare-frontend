@@ -19,7 +19,6 @@ import { CreateReportScreen } from "@/features/reports/CreateReportScreen";
 import { FeedbackScreen } from "@/features/reports/FeedbackScreen";
 import { NotificationScreen } from "@/features/notifications/NotificationScreen";
 import { ProfileScreen } from "@/features/profile/ProfileScreen";
-import { AddUserScreen} from "@/features/users/addUserScreen";
 import { OfflineQueueScreen } from "@/features/offline/OfflineQueueScreen";
 
 import { AdminReportsScreen } from "@/features/admin/AdminReportsScreen";
@@ -35,6 +34,7 @@ import { RepairNoteScreen } from "@/features/technician/RepairNoteScreen";
 
 import { UploadMediaScreen } from "@/features/media/UploadMediaScreen";
 import { NotFoundScreen } from "@/features/notFound";
+import { UserListScreen } from "@/features/users/UserListScreen";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -52,7 +52,8 @@ export type RootStackParamList = {
     mediaType?: "DAMAGE_PHOTO" | "REPAIR_PROOF" | "ADDITIONAL_EVIDENCE";
   };
   NotFound: undefined;
-  AddUser: undefined;
+
+  Users:undefined;
 };
 
 export type MainTabParamList = {
@@ -65,7 +66,7 @@ export type MainTabParamList = {
   Profile: undefined;
   Categories: undefined;
   Locations: undefined;
-  AddUser: undefined;
+   Users: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -161,6 +162,22 @@ function MainTabs() {
         </Tab.Screen>
       ) : null}
 
+  {user?.role === "ADMIN" ? (
+  <Tab.Screen
+    name="Users"
+    options={{
+      title: "User",
+      tabBarIcon: () => <TabIcon label="👥" />,
+    }}
+  >
+    {(props) => (
+      <RoleGuard allowedRoles={ADMIN_ONLY}>
+        <UserListScreen {...(props as any)} />
+      </RoleGuard>
+    )}
+  </Tab.Screen>
+) : null}
+
       {user?.role === "ADMIN" ? (
         <Tab.Screen
           name="Locations"
@@ -246,7 +263,21 @@ export function AppRouter() {
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator>
         {!user ? (
+          
           <>
+
+         
+
+<Stack.Screen
+  name="Users"
+  options={{ title: "Manajemen User" }}
+>
+  {(props) => (
+    <RoleGuard allowedRoles={ADMIN_ONLY}>
+      <UserListScreen {...props} />
+    </RoleGuard>
+  )}
+</Stack.Screen>
             <Stack.Screen
               name="Login"
               component={LoginScreen}
@@ -266,6 +297,7 @@ export function AppRouter() {
               component={MainTabs}
               options={{ headerShown: false }}
             />
+            
 
             <Stack.Screen
               name="CreateReport"
@@ -297,15 +329,16 @@ export function AppRouter() {
               )}
             </Stack.Screen>
 
-            <Stack.Screen name="AddUser"
-              options={{ title: "Manajemen User" }}>
-                {(props) => (
-                <RoleGuard allowedRoles={ADMIN_ONLY}>
-                  <AddUserScreen {...props} />
-                </RoleGuard>
-              )}
-
-              </Stack.Screen>
+        <Stack.Screen
+  name="Users"
+  options={{ title: "Manajemen User" }}
+>
+  {(props) => (
+    <RoleGuard allowedRoles={ADMIN_ONLY}>
+      <UserListScreen {...props} />
+    </RoleGuard>
+  )}
+</Stack.Screen>
             
             <Stack.Screen
               name="VerifyRejectReport"

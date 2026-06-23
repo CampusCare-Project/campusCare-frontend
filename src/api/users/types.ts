@@ -29,3 +29,17 @@ export type AddUserPayload = {
   passwordHash: string;
   role: Exclude<UserRole, 'ADMIN'>;
 };
+export type ManagedUser = {
+  id_user: string;
+  username: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  role: UserRole;
+  status: UserStatus;
+  avatarMediaId?: string | null;
+  identityNumber?: string | null;
+  department?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
