@@ -1,22 +1,51 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getErrorMessage } from '@/api/client';
-import { userService } from './service';
-import type { AddUserPayload, AppUser, ListUsersQuery } from './types';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { getErrorMessage } from "@/api/client";
+import { userService } from "./service";
+import type { AddUserPayload, AppUser, ListUsersQuery } from "./types";
 
 export function useUsers(initialQuery?: ListUsersQuery, autoFetch = true) {
   const [items, setItems] = useState<AppUser[]>([]);
+  const [selected, setSelected] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const stableInitialQuery = useMemo(() => initialQuery, [JSON.stringify(initialQuery ?? {})]);
+  const stableInitialQuery = useMemo(
+    () => initialQuery,
+    [JSON.stringify(initialQuery ?? {})]
+  );
 
-  const fetchUsers = useCallback(async (query?: ListUsersQuery) => {
+  const fetchUsers = useCallback(
+    async (query?: ListUsersQuery) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data = await userService.list(query ?? stableInitialQuery);
+
+        setItems(data);
+
+        return data;
+      } catch (err) {
+        const message = getErrorMessage(err);
+        setError(message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [stableInitialQuery]
+  );
+
+  const fetchUserById = useCallback(async (id: string) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await userService.list(query ?? stableInitialQuery);
-      setItems(data);
+
+      const data = await userService.getById(id);
+
+      setSelected(data);
+
       return data;
     } catch (err) {
       const message = getErrorMessage(err);
@@ -25,14 +54,17 @@ export function useUsers(initialQuery?: ListUsersQuery, autoFetch = true) {
     } finally {
       setLoading(false);
     }
-  }, [stableInitialQuery]);
+  }, []);
 
   const addUser = useCallback(async (payload: AddUserPayload) => {
     try {
       setSaving(true);
       setError(null);
+
       const created = await userService.addUser(payload);
+
       setItems((prev) => [created, ...prev]);
+
       return created;
     } catch (err) {
       const message = getErrorMessage(err);
@@ -49,10 +81,12 @@ export function useUsers(initialQuery?: ListUsersQuery, autoFetch = true) {
 
   return {
     items,
+    selected,
     loading,
     saving,
     error,
     fetchUsers,
+    fetchUserById,
     addUser,
   };
 }

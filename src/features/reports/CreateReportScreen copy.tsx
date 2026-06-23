@@ -304,38 +304,32 @@ const getAttachmentMediaSource = (
 
   const report = await reportService.create(payload);
 
-  if (!report?.id) {
-    throw new Error("Report berhasil dibuat, tetapi ID report tidak ditemukan.");
-  }
+ for (const attachment of attachments) {
+  console.log("UPLOAD ATTACHMENT:", attachment);
 
-  return report;
-}
+  const media = await mediaService.upload({
+    uri: attachment.uri,
+    fileName: attachment.name,
+    mimeType: attachment.mimeType,
+    source:
+      attachment.source === "camera"
+        ? "CAMERA"
+        : attachment.source === "gallery"
+        ? "GALLERY"
+        : "UPLOAD",
+    targetType: "REPORT",
+    targetId: report.id,
+    usageType: "REPORT_DAMAGE_PHOTO",
+  });
 
-const uploadReportAttachments = async (reportId: string) => {
-  for (const attachment of attachments) {
-    console.log("UPLOAD ATTACHMENT:", attachment);
+  console.log("MEDIA UPLOADED:", media);
 
-    const media = await mediaService.upload({
-      uri: attachment.uri,
-      fileName: attachment.name,
-      mimeType: attachment.mimeType,
-      source: getAttachmentMediaSource(attachment.source),
-      targetType: "REPORT",
-      targetId: reportId,
-      usageType: "REPORT_DAMAGE_PHOTO",
-    });
-
-    console.log("MEDIA UPLOADED:", media);
-
-    await reportService.addMedia(reportId, {
-      mediaId: media.id,
-      type: "DAMAGE_PHOTO",
-      caption: attachment.name || "Media laporan",
-    });
-
-    console.log("REPORT MEDIA ADDED:", media.id);
-  }
-};
+  await reportService.addMedia(report.id, {
+    mediaId: media.id,
+    type: "DAMAGE_PHOTO",
+    caption: attachment.name || "Media laporan",
+  });
+}}
 
 const getRoomNameSnapshot = () => {
   if (!selectedRoom) return undefined;
@@ -379,7 +373,7 @@ await saveLocalReport(
 );
 };
 
- const handleSubmit = async () => {
+  const handleSubmit = async () => {
   if (loading) return;
 
   setFieldErrors({});
@@ -394,57 +388,46 @@ await saveLocalReport(
   try {
     setLoading(true);
 
-    // STEP 1: CREATE REPORT
-    // Kalau step ini gagal, baru simpan offline.
-    try {
-      createdReport = await submitOnline();
-    } catch (createError: any) {
-      console.log("CREATE REPORT ERROR FULL:", createError);
-      console.log("CREATE REPORT ERROR MESSAGE:", createError?.message);
-      console.log("CREATE REPORT ERROR STATUS:", createError?.response?.status);
-      console.log("CREATE REPORT ERROR DATA:", createError?.response?.data);
+    // HANYA API ONLINE DI SINI
+    createdReport = await submitOnline();
+  } catch (error: any) {
+    console.log("CREATE REPORT ERROR FULL:", error);
+    // console.log("CREATE REPORT ERROR MESSAGE:", error?.message);
+    // console.log("CREATE REPORT ERROR STATUS:", error?.response?.status);
+    // console.log("CREATE REPORT ERROR DATA:", error?.response?.data);
 
+    try {
       await saveOffline();
 
       toast.success("Koneksi/API gagal. Laporan disimpan di Offline Queue.");
       navigation.goBack();
-      return;
-    }
-
-    const reportId = createdReport?.id;
-
-    if (!reportId) {
-      console.log("CREATED REPORT INVALID:", createdReport);
-      toast.error("Laporan dibuat, tetapi ID laporan tidak ditemukan.");
-      return;
-    }
-
-    // STEP 2: UPLOAD MEDIA
-    // Kalau media gagal, jangan simpan offline lagi karena report sudah masuk.
-    try {
-      await uploadReportAttachments(reportId);
-    } catch (mediaError: any) {
-      console.log("UPLOAD MEDIA AFTER CREATE ERROR FULL:", mediaError);
-      console.log("UPLOAD MEDIA AFTER CREATE ERROR MESSAGE:", mediaError?.message);
-      console.log("UPLOAD MEDIA AFTER CREATE ERROR STATUS:", mediaError?.response?.status);
-      console.log("UPLOAD MEDIA AFTER CREATE ERROR DATA:", mediaError?.response?.data);
-
+    } catch (offlineError: any) {
       toast.error(
-        "Laporan berhasil dibuat, tetapi ada media yang gagal diupload/ditempel."
+        getApiErrorMessage(
+          offlineError,
+          "Gagal membuat laporan dan gagal menyimpan offline"
+        )
       );
-
-      navigation.replace("ReportDetail", { id: reportId });
-      return;
+    } finally {
+      setLoading(false);
     }
 
-    toast.success("Laporan berhasil dibuat");
-    navigation.replace("ReportDetail", { id: reportId });
-  } catch (error: any) {
-    // console.log("HANDLE SUBMIT UNKNOWN ERROR:", error);
-    toast.error(getApiErrorMessage(error, "Gagal membuat laporan"));
-  } finally {
-    setLoading(false);
+    return;
   }
+
+  setLoading(false);
+
+  const reportId = createdReport?.id;
+
+  if (!reportId) {
+    console.log("CREATED REPORT INVALID:", createdReport);
+    toast.error("Laporan dibuat, tetapi ID laporan tidak ditemukan.");
+    return;
+  }
+
+  toast.success("Laporan berhasil dibuat");
+
+  navigation.replace("ReportDetail", { id: reportId });
 };
 
   return (

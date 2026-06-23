@@ -1,4 +1,4 @@
-import { privateClient,TOKEN_KEY } from '@/api/client';
+import { privateClient } from '@/api/client';
 import type { ApiResponse } from '@/types/common';
 import type {
   MediaAsset,
@@ -8,8 +8,6 @@ import type {
   UploadMediaInput,
 } from "./types";
 import { Platform } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ENV } from "@/config/env";
 
 function getFileNameFromUri(uri: string) {
   const cleanUri = uri.split("?")[0];
@@ -97,55 +95,34 @@ async function appendFileToFormData(
 
 export const mediaService = {
   async upload(input: UploadMediaInput) {
-  const formData = new FormData();
+    const formData = new FormData();
 
-  await appendFileToFormData(formData, input);
+    await appendFileToFormData(formData, input);
 
-  formData.append("source", input.source);
+    formData.append("source", input.source);
 
-  if (input.targetType) {
-    formData.append("targetType", input.targetType);
-  }
-
-  if (input.targetId) {
-    formData.append("targetId", input.targetId);
-  }
-
-  if (input.usageType) {
-    formData.append("usageType", input.usageType);
-  }
-
-  const token = await AsyncStorage.getItem(TOKEN_KEY);
-
-  const response = await fetch(
-    `${ENV.API_BASE_URL.replace(/\/$/, "")}/api/media/upload`,
-    {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: formData,
+    if (input.targetType) {
+      formData.append("targetType", input.targetType);
     }
-  );
 
-  const json = await response.json().catch(() => null);
+    if (input.targetId) {
+      formData.append("targetId", input.targetId);
+    }
 
-  if (!response.ok || !json?.success) {
-    const error: any = new Error(
-      json?.message || `Upload gagal dengan status ${response.status}`
-    );
+    if (input.usageType) {
+      formData.append("usageType", input.usageType);
+    }
 
-    error.response = {
-      status: response.status,
-      data: json,
-    };
+    const response = await privateClient.post<{
+      success: boolean;
+      message: string;
+      data: MediaAsset;
+    }>("/api/media/upload", formData, {
+      transformRequest: (data) => data,
+    });
 
-    throw error;
-  }
-
-  return json.data as MediaAsset;
-},
+    return response.data.data;
+  },
   async detail(id: string) {
     const res = await privateClient.get<ApiResponse<MediaAsset>>(`/api/media/${id}`);
     return res.data.data;

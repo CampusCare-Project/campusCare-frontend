@@ -19,6 +19,7 @@ import { CreateReportScreen } from "@/features/reports/CreateReportScreen";
 import { FeedbackScreen } from "@/features/reports/FeedbackScreen";
 import { NotificationScreen } from "@/features/notifications/NotificationScreen";
 import { ProfileScreen } from "@/features/profile/ProfileScreen";
+import { AddUserScreen} from "@/features/users/addUserScreen";
 import { OfflineQueueScreen } from "@/features/offline/OfflineQueueScreen";
 
 import { AdminReportsScreen } from "@/features/admin/AdminReportsScreen";
@@ -51,6 +52,7 @@ export type RootStackParamList = {
     mediaType?: "DAMAGE_PHOTO" | "REPAIR_PROOF" | "ADDITIONAL_EVIDENCE";
   };
   NotFound: undefined;
+  AddUser: undefined;
 };
 
 export type MainTabParamList = {
@@ -63,6 +65,7 @@ export type MainTabParamList = {
   Profile: undefined;
   Categories: undefined;
   Locations: undefined;
+  AddUser: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -294,6 +297,16 @@ export function AppRouter() {
               )}
             </Stack.Screen>
 
+            <Stack.Screen name="AddUser"
+              options={{ title: "Manajemen User" }}>
+                {(props) => (
+                <RoleGuard allowedRoles={ADMIN_ONLY}>
+                  <AddUserScreen {...props} />
+                </RoleGuard>
+              )}
+
+              </Stack.Screen>
+            
             <Stack.Screen
               name="VerifyRejectReport"
               options={{ title: "Verifikasi / Tolak" }}
@@ -315,7 +328,7 @@ export function AppRouter() {
                 </RoleGuard>
               )}
             </Stack.Screen>
-
+              
             <Stack.Screen
               name="UpdateStatus"
               options={{ title: "Update Status" }}
@@ -326,6 +339,7 @@ export function AppRouter() {
                 </RoleGuard>
               )}
             </Stack.Screen>
+
 
             <Stack.Screen
               name="RepairNote"
