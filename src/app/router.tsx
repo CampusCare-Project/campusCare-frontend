@@ -265,19 +265,6 @@ export function AppRouter() {
         {!user ? (
           
           <>
-
-         
-
-<Stack.Screen
-  name="Users"
-  options={{ title: "Manajemen User" }}
->
-  {(props) => (
-    <RoleGuard allowedRoles={ADMIN_ONLY}>
-      <UserListScreen {...props} />
-    </RoleGuard>
-  )}
-</Stack.Screen>
             <Stack.Screen
               name="Login"
               component={LoginScreen}
