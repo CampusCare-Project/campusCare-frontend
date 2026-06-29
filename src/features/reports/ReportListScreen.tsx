@@ -4,7 +4,7 @@ import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { useFocusEffect } from "@react-navigation/native";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ButtonId";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Loading } from "@/components/ui/Loading";
@@ -18,7 +18,7 @@ import { User } from "@/api/auth/types";
 import { useReports } from "@/api/reports/hooks";
 import { searchInFields } from "@/utils/search";
 
-import type { MainTabParamList } from "@/app/router";
+import type { MainTabParamList } from "@/app/router1";
 
 type Props = BottomTabScreenProps<MainTabParamList, "Reports">;
 
@@ -277,7 +277,10 @@ useEffect(() => {
     <DashboardLayout title="Laporan">
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.pageTitle}>Daftar Laporan</Text>
+          <Text style={styles.pageTitle}
+           testID="reports-list-title"
+  accessibilityLabel="reports-list-title"
+          >Daftar Laporan</Text>
           <Text style={styles.pageSubtitle}>
             Lihat laporan kerusakan, status penanganan, prioritas, lokasi, dan
             detail pelapor.
@@ -287,13 +290,17 @@ useEffect(() => {
 
       {canCreateReport ? (
         <Button
-          title="+ Buat Laporan"
+            testID="reports-create-button"
+  accessibilityLabel="reports-create-button"
+  title="+ Buat Laporan"
           onPress={() => (navigation as any).getParent()?.navigate("CreateReport")}
         />
       ) : null}
 
       <View style={styles.filterSection}>
         <SearchInput
+          testID="reports-search-input"
+  accessibilityLabel="reports-search-input"
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder="Cari judul, status, prioritas, lokasi, pelapor..."
@@ -344,7 +351,7 @@ useEffect(() => {
         scrollEnabled={false}
         data={filteredReports}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => {
+        renderItem={({ item,index }) => {
           const report: any = item;
 
           const locationName =
@@ -379,6 +386,8 @@ const technicianName =
 
           return (
             <Pressable
+              testID={`report-detail-button-${index}`}
+  accessibilityLabel={`report-detail-button-${index}`}
               onPress={() =>
                 (navigation as any)
                   .getParent()
@@ -388,7 +397,10 @@ const technicianName =
               <Card>
                 <View style={styles.cardHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.reportTitle}>{report.title}</Text>
+                    <Text style={styles.reportTitle}
+                      testID={`report-title-${index}`}
+  accessibilityLabel={`report-title-${index}`}
+                    >{report.title}</Text>
                     <Text numberOfLines={2} style={styles.description}>
                       {report.description || "Tidak ada deskripsi."}
                     </Text>

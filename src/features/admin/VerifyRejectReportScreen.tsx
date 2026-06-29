@@ -4,11 +4,11 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { toast } from "sonner-native";
 
 import { Screen } from "@/components/ui/Screen";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ButtonId";
 import { Input } from "@/components/ui/Input";
 
 import { reportService } from "@/api/reports/service";
-import type { RootStackParamList } from "@/app/router";
+import type { RootStackParamList } from "@/app/router1";
 
 type Props = NativeStackScreenProps<RootStackParamList, "VerifyRejectReport">;
 
@@ -76,8 +76,8 @@ export function VerifyRejectReportScreen({ route, navigation }: Props) {
       toast.success("Laporan berhasil ditolak");
       navigation.goBack();
     } catch (e: any) {
-      console.log("REJECT ERROR STATUS:", e?.response?.status);
-      console.log("REJECT ERROR DATA:", e?.response?.data);
+      // console.log("REJECT ERROR STATUS:", e?.response?.status);
+      // console.log("REJECT ERROR DATA:", e?.response?.data);
 
       toast.error(getErrorMessage(e, "Gagal menolak laporan"));
     } finally {
@@ -88,7 +88,10 @@ export function VerifyRejectReportScreen({ route, navigation }: Props) {
   return (
     <Screen>
       <View style={styles.header}>
-        <Text style={styles.title}>Verifikasi / Tolak Laporan</Text>
+        <Text style={styles.title}  
+         testID="verify-reject-title"
+  accessibilityLabel="verify-reject-title">Verifikasi / Tolak Laporan
+  </Text>
         <Text style={styles.subtitle}>
           Periksa laporan terlebih dahulu sebelum memverifikasi atau menolaknya.
         </Text>
@@ -98,6 +101,8 @@ export function VerifyRejectReportScreen({ route, navigation }: Props) {
         <Text style={styles.sectionTitle}>Verifikasi Laporan</Text>
 
         <Input
+          testID="admin-verify-note-input"
+  accessibilityLabel="admin-verify-note-input"
           label="Catatan verifikasi"
           value={note}
           onChangeText={setNote}
@@ -107,6 +112,8 @@ export function VerifyRejectReportScreen({ route, navigation }: Props) {
         />
 
         <Button
+          testID="admin-verify-button"
+  accessibilityLabel="admin-verify-button"
           title="Verifikasi Laporan"
           onPress={verify}
           loading={isVerifying}
@@ -120,6 +127,8 @@ export function VerifyRejectReportScreen({ route, navigation }: Props) {
         <Text style={styles.sectionTitle}>Tolak Laporan</Text>
 
         <Input
+          testID="admin-reject-reason-input"
+  accessibilityLabel="admin-reject-reason-input"
           label="Alasan penolakan"
           value={reason}
           onChangeText={setReason}
@@ -129,6 +138,8 @@ export function VerifyRejectReportScreen({ route, navigation }: Props) {
         />
 
         <Button
+          testID="admin-reject-submit-button"
+          accessibilityLabel="admin-reject-submit-button"
           title="Tolak Laporan"
           variant="danger"
           onPress={reject}

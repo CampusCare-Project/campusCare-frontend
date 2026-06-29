@@ -201,15 +201,10 @@ export function CategoryScreen() {
   return (
     <DashboardLayout title="Kategori Masalah">
       <View style={styles.header}>
-        <View style={{ flex: 1 }}>
-          <Text
+        <View style={{ flex: 1 }}   
             testID="categories-title"
-            accessibilityLabel="categories-title"
-            style={styles.pageTitle}
-          >
-            Pengelolaan category
-          </Text>
-
+            accessibilityLabel="categories-title">
+          <Text style={styles.pageTitle}>Pengelolaan category</Text>
           <Text style={styles.pageSubtitle}>
             Kelola kategori laporan seperti AC, listrik, jaringan, fasilitas,
             dan kategori kerusakan lainnya.
@@ -217,11 +212,9 @@ export function CategoryScreen() {
         </View>
 
         <Pressable
-          testID="category-create-button"
+                  testID="category-create-button"
           accessibilityLabel="category-create-button"
-          style={styles.addButton}
-          onPress={openCreateModal}
-        >
+        style={styles.addButton} onPress={openCreateModal}>
           <Text style={styles.addButtonText}>+ Kategori</Text>
         </Pressable>
       </View>
@@ -255,11 +248,7 @@ export function CategoryScreen() {
 
       {filteredCategories.length === 0 ? (
         <Card>
-          <Text
-            testID="categories-empty-text"
-            accessibilityLabel="categories-empty-text"
-            style={styles.emptyText}
-          >
+          <Text style={styles.emptyText}>
             {searchQuery.trim()
               ? "Tidak ada kategori yang cocok dengan pencarian."
               : "Belum ada kategori masalah. Tambahkan kategori terlebih dahulu."}
@@ -270,69 +259,52 @@ export function CategoryScreen() {
           scrollEnabled={false}
           data={filteredCategories}
           keyExtractor={(item) => item.id}
-          renderItem={({ item, index }) => (
-            <View
-              testID={`category-card-${index}`}
+          renderItem={({ item,index }) => (
+            <View>
+                            testID={`category-card-${index}`}
               accessibilityLabel={`category-card-${index}`}
-            >
-              <Card>
-                <View style={styles.categoryHeader}>
-                  <View style={styles.categoryIcon}>
-                    <Text style={styles.categoryIconText}>
-                      {item.name?.slice(0, 2).toUpperCase()}
-                    </Text>
-                  </View>
-
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      testID={`category-name-text-${index}`}
-                      accessibilityLabel={`category-name-text-${index}`}
-                      style={styles.categoryName}
-                    >
-                      {item.name}
-                    </Text>
-
-                    <Text
-                      testID={`category-slug-text-${index}`}
-                      accessibilityLabel={`category-slug-text-${index}`}
-                      style={styles.categorySlug}
-                    >
-                      /{item.slug}
-                    </Text>
-                  </View>
-
-                  <View style={styles.slaBadge}>
-                    <Text style={styles.slaBadgeText}>
-                      {item.defaultSlaHours ?? 72} jam
-                    </Text>
-                  </View>
+          
+            <Card>
+              <View style={styles.categoryHeader}>
+                <View style={styles.categoryIcon}>
+                  <Text style={styles.categoryIconText}>
+                    {item.name?.slice(0, 2).toUpperCase()}
+                  </Text>
                 </View>
 
-                <Text style={styles.description}>
-                  {item.description || "Tidak ada deskripsi."}
-                </Text>
-
-                <View style={styles.cardActions}>
-                  <Pressable
-                    testID={`category-edit-button-${index}`}
-                    accessibilityLabel={`category-edit-button-${index}`}
-                    style={styles.updateButton}
-                    onPress={() => openUpdateModal(item)}
-                  >
-                    <Text style={styles.updateButtonText}>Update</Text>
-                  </Pressable>
-
-                  <Pressable
-                    testID={`category-delete-button-${index}`}
-                    accessibilityLabel={`category-delete-button-${index}`}
-                    style={styles.deleteButton}
-                    onPress={() => setDeleteTarget(item)}
-                  >
-                    <Text style={styles.deleteButtonText}>Hapus</Text>
-                  </Pressable>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.categoryName}>{item.name}</Text>
+                  <Text style={styles.categorySlug}>/{item.slug}</Text>
                 </View>
-              </Card>
-            </View>
+
+                <View style={styles.slaBadge}>
+                  <Text style={styles.slaBadgeText}>
+                    {item.defaultSlaHours ?? 72} jam
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.description}>
+                {item.description || "Tidak ada deskripsi."}
+              </Text>
+
+              <View style={styles.cardActions}>
+                <Pressable
+                  style={styles.updateButton}
+                  onPress={() => openUpdateModal(item)}
+                >
+                  <Text style={styles.updateButtonText}>Update</Text>
+                </Pressable>
+
+                <Pressable
+                  style={styles.deleteButton}
+                  onPress={() => setDeleteTarget(item)}
+                >
+                  <Text style={styles.deleteButtonText}>Hapus</Text>
+                </Pressable>
+              </View>
+            </Card>
+              </View>
           )}
         />
       )}
@@ -389,7 +361,6 @@ export function CategoryScreen() {
     </DashboardLayout>
   );
 }
-
 
 const styles = StyleSheet.create({
   header: {

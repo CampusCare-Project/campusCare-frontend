@@ -5,7 +5,7 @@ import { AuthLayout } from '@/layouts/AuthLayout';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/api/auth/hooks';
-import type { RootStackParamList } from '@/app/router';
+import type { RootStackParamList } from '@/app/router1';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 

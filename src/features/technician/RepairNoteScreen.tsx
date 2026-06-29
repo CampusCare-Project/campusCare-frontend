@@ -1,37 +1,77 @@
-import { useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Screen } from '@/components/ui/Screen';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { Input } from '@/components/ui/Input';
-import { reportService } from '@/api/reports/service';
-import type { RootStackParamList } from '@/app/router';
-import type { NoteVisibility } from '@/api/reports/types';
+import { useEffect } from "react";
+import { FlatList, Pressable, Text, View } from "react-native";
+import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 
-type Props = NativeStackScreenProps<RootStackParamList, 'RepairNote'>;
+import { DashboardLayout } from "@/layouts/DashboardLayout";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { useReports } from "@/api/reports/hooks";
+import type { MainTabParamList } from "@/app/router1";
 
-export function RepairNoteScreen({ route, navigation }: Props) {
-  const { id } = route.params;
-  const [note, setNote] = useState('');
-  const [visibility, setVisibility] = useState<NoteVisibility>('PUBLIC');
-  const [loading, setLoading] = useState(false);
+type Props = BottomTabScreenProps<MainTabParamList, "Technician">;
 
-  const submit = async () => {
-    setLoading(true);
-    try { await reportService.addNote(id, { note, visibility }); Alert.alert('Berhasil', 'Catatan disimpan.'); navigation.goBack(); }
-    catch (e: any) { Alert.alert('Gagal', e?.message || 'Gagal menyimpan catatan'); }
-    finally { setLoading(false); }
-  };
+export function TechnicianTasksScreen({ navigation }: Props) {
+  const { items, fetchReports } = useReports();
+
+  useEffect(() => {
+    void fetchReports({ limit: 100 });
+  }, []);
 
   return (
-    <Screen>
-      <Input label="Catatan perbaikan" value={note} onChangeText={setNote} multiline numberOfLines={5} />
-      <Text style={{ fontWeight: '900' }}>Visibility</Text>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        {(['PUBLIC', 'INTERNAL'] as NoteVisibility[]).map((v) => <Pressable key={v} onPress={() => setVisibility(v)}><Badge label={`${visibility === v ? '✓ ' : ''}${v}`} /></Pressable>)}
-      </View>
-      <Button title="Simpan Catatan" onPress={submit} loading={loading} />
-    </Screen>
+    <DashboardLayout title="Tugas Teknisi">
+      <Text
+        testID="technician-tasks-title"
+        accessibilityLabel="technician-tasks-title"
+        style={{
+          fontSize: 24,
+          fontWeight: "900",
+          color: "#0F172A",
+          marginBottom: 12,
+        }}
+      >
+        Tugas Teknisi
+      </Text>
+
+      <FlatList
+        scrollEnabled={false}
+        data={items}
+        keyExtractor={(i) => i.id}
+        renderItem={({ item, index }) => (
+          <Pressable
+            testID={`technician-task-detail-button-${index}`}
+            accessibilityLabel={`technician-task-detail-button-${index}`}
+            onPress={() =>
+              (navigation as any)
+                .getParent()
+                ?.navigate("ReportDetail", { id: item.id })
+            }
+          >
+            <View
+              testID={`technician-task-card-${index}`}
+              accessibilityLabel={`technician-task-card-${index}`}
+            >
+              <Card>
+                <Text
+                  testID={`technician-task-title-${index}`}
+                  accessibilityLabel={`technician-task-title-${index}`}
+                  style={{ fontWeight: "900" }}
+                >
+                  {item.title}
+                </Text>
+
+                <Badge label={item.status} />
+
+                <Text
+                  testID={`technician-task-location-${index}`}
+                  accessibilityLabel={`technician-task-location-${index}`}
+                >
+                  {item.locationText || "-"}
+                </Text>
+              </Card>
+            </View>
+          </Pressable>
+        )}
+      />
+    </DashboardLayout>
   );
 }

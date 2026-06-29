@@ -1,6 +1,8 @@
 import { Alert, Text } from 'react-native';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
-import { Button } from '@/components/ui/Button';
+// import { Button } from '@/components/ui/Button';
+import { Button } from "@/components/ui/ButtonId";
+
 import { Card } from '@/components/ui/Card';
 import { useAuth } from '@/api/auth/hooks';
 
@@ -19,7 +21,12 @@ export function ProfileScreen() {
         <Text>Role: {user?.role}</Text>
         <Text>Department: {user?.department || '-'}</Text>
       </Card>
-      <Button title="Logout" variant="danger" onPress={handleLogout} />
+      <Button 
+      title="Logout" 
+      variant="danger"  
+        testID="profile-logout-button"
+  accessibilityLabel="profile-logout-button"
+      onPress={handleLogout} />
     </DashboardLayout>
   );
 }

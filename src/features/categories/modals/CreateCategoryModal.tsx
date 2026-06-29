@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/Button";
+// import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ButtonId";
 import { AppModal } from "@/components/ui/appModal";
 import { ZodInput } from "@/components/ui/ZodInput";
 import type { ZodFieldErrors } from "@/utils/zodErrors";
@@ -49,6 +50,8 @@ export function CreateCategoryModal({
       onClose={onClose}
       footer={
         <Button
+          testID="category-submit-button"
+          accessibilityLabel="category-submit-button"
           title="Simpan Kategori"
           onPress={onSubmit}
           loading={loading}
@@ -56,6 +59,8 @@ export function CreateCategoryModal({
       }
     >
       <ZodInput
+        testID="category-name-input"
+        accessibilityLabel="category-name-input"
         name="name"
         label="Nama Kategori"
         value={name}
@@ -67,6 +72,8 @@ export function CreateCategoryModal({
       />
 
       <ZodInput
+        testID="category-slug-input"
+        accessibilityLabel="category-slug-input"
         name="slug"
         label="Slug"
         value={slug}
@@ -79,6 +86,8 @@ export function CreateCategoryModal({
       />
 
       <ZodInput
+        testID="category-description-input"
+        accessibilityLabel="category-description-input"
         name="description"
         label="Deskripsi"
         value={description}
@@ -95,6 +104,8 @@ export function CreateCategoryModal({
       />
 
       <ZodInput
+        testID="category-sla-input"
+        accessibilityLabel="category-sla-input"
         name="defaultSlaHours"
         label="SLA Default"
         value={defaultSlaHours}

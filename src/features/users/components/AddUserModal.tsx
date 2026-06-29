@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { AppModal } from "@/components/ui/appModal";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ButtonId";
 import { ZodInput } from "@/components/ui/ZodInput";
-import { SelectorInput } from "@/components/ui/selectorInput";
+import { SelectorInput } from "@/components/ui/selectorInputId";
 
 import type { AddUserPayload } from "@/api/users/types";
 import type { ZodFieldErrors } from "@/utils/zodErrors";
@@ -148,6 +148,8 @@ export function AddUserModal({
       footer={
         <View style={styles.footerRow}>
           <Button
+            testID="users-add-cancel-button"
+      accessibilityLabel="users-add-cancel-button"
             title="Batal"
             variant="secondary"
             disabled={saving}
@@ -155,6 +157,8 @@ export function AddUserModal({
           />
 
           <Button
+             testID="users-add-submit-button"
+      accessibilityLabel="users-add-submit-button"
             title="Simpan User"
             loading={saving}
             disabled={saving}
@@ -164,8 +168,16 @@ export function AddUserModal({
       }
     >
       <Text style={styles.sectionTitle}>Identitas User</Text>
-
+<Text
+  testID="users-add-modal-title"
+  accessibilityLabel="users-add-modal-title"
+  style={styles.modalTitle}
+>
+  Tambah User
+</Text>
       <ZodInput
+        testID="users-add-username-input"
+  accessibilityLabel="users-add-username-input"
         name="username"
         label="Username"
         value={username}
@@ -181,6 +193,8 @@ export function AddUserModal({
       />
 
       <ZodInput
+        testID="users-add-name-input"
+  accessibilityLabel="users-add-name-input"
         name="name"
         label="Nama Lengkap"
         value={name}
@@ -195,6 +209,8 @@ export function AddUserModal({
       />
 
       <ZodInput
+        testID="users-add-email-input"
+  accessibilityLabel="users-add-email-input"
         name="email"
         label="Email"
         value={email}
@@ -211,6 +227,8 @@ export function AddUserModal({
       />
 
       <ZodInput
+        testID="users-add-password-input"
+  accessibilityLabel="users-add-password-input"
         name="passwordHash"
         label="Password Awal"
         value={passwordHash}
@@ -228,6 +246,9 @@ export function AddUserModal({
       <Text style={styles.sectionTitle}>Role User</Text>
 
       <SelectorInput
+        testID="users-add-role-select"
+  accessibilityLabel="users-add-role-select"
+  optionTestIDPrefix="users-add-role-option"
         label="Role"
         placeholder="Pilih role user"
         options={ROLE_OPTIONS}
@@ -269,4 +290,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
   },
+  modalTitle: {
+  fontSize: 18,
+  fontWeight: "900",
+  color: "#0F172A",
+  marginBottom: 12,
+},
 });

@@ -4,11 +4,13 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { toast } from "sonner-native";
 
 import { AuthLayout } from "@/layouts/AuthLayout";
-import { Button } from "@/components/ui/Button";
+// import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ButtonId";
+
 import { ZodInput } from "@/components/ui/ZodInput";
 
 import { useAuth } from "@/api/auth/hooks";
-import type { RootStackParamList } from "@/app/router";
+import type { RootStackParamList } from "@/app/router1";
 import type { ZodFieldErrors } from "@/utils/zodErrors";
 import { getApiErrorMessage } from "@/utils/apiError";
 
@@ -107,6 +109,8 @@ export function LoginScreen({ navigation }: Props) {
       ) : null}
 
       <ZodInput
+      testID="login-identifier-input"
+      accessibilityLabel="login-identifier-input"
         name="identifier"
         label="Username / Email / Nama"
         value={identifier}
@@ -124,6 +128,8 @@ export function LoginScreen({ navigation }: Props) {
       />
 
       <ZodInput
+       testID="login-password-input"
+  accessibilityLabel="login-password-input"
         name="password"
         label="Password"
         value={password}
@@ -140,6 +146,8 @@ export function LoginScreen({ navigation }: Props) {
       />
 
       <Button
+        testID="login-submit-button"
+        accessibilityLabel="login-submit-button"
         title="Masuk"
         onPress={handleLogin}
         loading={submitting}

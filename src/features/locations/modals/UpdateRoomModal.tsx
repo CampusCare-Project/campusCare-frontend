@@ -1,7 +1,7 @@
 import { Text } from "react-native";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ButtonId";
 import { AppModal } from "@/components/ui/appModal";
-import { SelectorInput } from "@/components/ui/selectorInput";
+import { SelectorInput } from "@/components/ui/selectorInputId";
 import { ZodInput } from "@/components/ui/ZodInput";
 import type { Building } from "@/api/locations/types";
 import type { ZodFieldErrors } from "@/utils/zodErrors";
@@ -35,6 +35,8 @@ export function UpdateRoomModal(props: Props) {
       onClose={props.onClose}
       footer={
         <Button
+           testID="room-update-submit-button"
+          accessibilityLabel="room-update-submit-button"
           title="Simpan Perubahan"
           onPress={props.onSubmit}
           loading={props.loading}
@@ -42,6 +44,9 @@ export function UpdateRoomModal(props: Props) {
       }
     >
       <SelectorInput<Building>
+        testID="room-update-building-select"
+        accessibilityLabel="room-update-building-select"
+        optionTestIDPrefix="room-update-building-option"
         label="Gedung"
         placeholder="Ketik nama gedung..."
         options={props.buildings}
@@ -60,6 +65,8 @@ export function UpdateRoomModal(props: Props) {
 
       {props.errors.buildingId?.[0] ? (
         <Text
+                  testID="room-update-building-error"
+          accessibilityLabel="room-update-building-error"
           style={{
             color: "#DC2626",
             fontSize: 12,
@@ -73,6 +80,8 @@ export function UpdateRoomModal(props: Props) {
       ) : null}
 
       <ZodInput
+              testID="room-update-name-input"
+        accessibilityLabel="room-update-name-input"
         name="name"
         label="Nama Ruangan"
         value={props.name}
@@ -84,6 +93,8 @@ export function UpdateRoomModal(props: Props) {
       />
 
       <ZodInput
+         testID="room-update-code-input"
+        accessibilityLabel="room-update-code-input"
         name="code"
         label="Kode Ruangan"
         value={props.code}
@@ -95,6 +106,8 @@ export function UpdateRoomModal(props: Props) {
       />
 
       <ZodInput
+              testID="room-update-floor-input"
+        accessibilityLabel="room-update-floor-input"
         name="floorName"
         label="Lantai"
         value={props.floorName}
@@ -105,6 +118,8 @@ export function UpdateRoomModal(props: Props) {
       />
 
       <ZodInput
+            testID="room-update-description-input"
+        accessibilityLabel="room-update-description-input"
         name="description"
         label="Deskripsi"
         value={props.description}

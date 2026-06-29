@@ -5,7 +5,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { toast } from "sonner-native";
 import { AddUserModal } from "@/features/users/components/AddUserModal";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ButtonId";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -18,7 +18,7 @@ import type { AppUser, UserStatus } from "@/api/users/types";
 import type { UserRole } from "@/constants/roles";
 import { getApiErrorMessage } from "@/utils/apiError";
 
-import type { RootStackParamList } from "@/app/router";
+import type { RootStackParamList } from "@/app/router1";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Users">;
 
@@ -137,19 +137,29 @@ const [addModalVisible, setAddModalVisible] = useState(false);
   return (
     <DashboardLayout title="Manajemen User">
       <View style={styles.header}>
-        <Text style={styles.pageTitle}>Daftar User</Text>
+       <Text
+  testID="users-title"
+  accessibilityLabel="users-title"
+  style={styles.pageTitle}
+>
+  Daftar User
+</Text>
         <Text style={styles.pageSubtitle}>
           Kelola user aplikasi CampusCare seperti mahasiswa, staff, dan teknisi.
         </Text>
       </View>
 
     <Button
+      testID="users-add-button"
+  accessibilityLabel="users-add-button"
   title="+ Tambah User"
   onPress={() => setAddModalVisible(true)}
 />
 
       <View style={styles.filterSection}>
         <SearchInput
+          testID="users-search-input"
+  accessibilityLabel="users-search-input"
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder="Cari nama, username, email, role..."
@@ -193,21 +203,33 @@ const [addModalVisible, setAddModalVisible] = useState(false);
         scrollEnabled={false}
         data={filteredUsers}
         keyExtractor={(item, index) => item.id_user || String(index)}
-        renderItem={({ item }) => {
+        renderItem={({ item,index}) => {
           const appUser = item;
 
           return (
-            <Pressable>
+            <Pressable
+              testID={`user-card-${index}`}
+  accessibilityLabel={`user-card-${index}`}
+            >
               <Card>
                 <View style={styles.cardHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.userName}>{appUser.name}</Text>
+                    <Text 
+                      testID={`user-name-${index}`}
+  accessibilityLabel={`user-name-${index}`}
+                    style={styles.userName}>{appUser.name}</Text>
 
-                    <Text style={styles.userMeta}>
+                    <Text 
+                      testID={`user-username-${index}`}
+  accessibilityLabel={`user-username-${index}`}
+                    style={styles.userMeta}>
                       @{appUser.username}
                     </Text>
 
-                    <Text style={styles.userEmail}>
+                    <Text
+                      testID={`user-email-${index}`}
+  accessibilityLabel={`user-email-${index}`}
+                    style={styles.userEmail}>
                       {appUser.email}
                     </Text>
                   </View>
@@ -247,7 +269,10 @@ const [addModalVisible, setAddModalVisible] = useState(false);
 
                   <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>ID User</Text>
-                    <Text numberOfLines={1} style={styles.detailValue}>
+                    <Text 
+                      testID={`user-id-${index}`}
+  accessibilityLabel={`user-id-${index}`}
+                    numberOfLines={1} style={styles.detailValue}>
                       {appUser.id_user}
                     </Text>
                   </View>

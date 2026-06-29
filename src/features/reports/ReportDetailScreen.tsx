@@ -13,7 +13,7 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import { Screen } from "@/components/ui/Screen";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ButtonId";
 import { Card } from "@/components/ui/Card";
 import { Loading } from "@/components/ui/Loading";
 import { useAuth } from "@/api/auth/hooks";
@@ -27,7 +27,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TOKEN_KEY } from "@/api/client";
 import { ENV } from "@/config/env";
 
-import type { RootStackParamList } from "@/app/router";
+import type { RootStackParamList } from "@/app/router1";
 
 
 type Props = NativeStackScreenProps<RootStackParamList, "ReportDetail">;
@@ -578,7 +578,10 @@ const feedbackUserName =
   return (
     <Screen>
       <Card>
-        <Text style={styles.title}>{selected.title}</Text>
+        <Text style={styles.title}
+         testID="report-detail-title"
+  accessibilityLabel="report-detail-title"
+        >{selected.title}</Text>
 
         <View style={styles.badgeRow}>
           <Badge label={getStatusLabel(selected.status)} />
@@ -596,9 +599,9 @@ const feedbackUserName =
       
 
           <View style={styles.detailItem}>
-  <Text style={styles.detailLabel}>Gedung</Text>
-  <Text style={styles.detailValue}>{buildingName}</Text>
-</View>
+          <Text style={styles.detailLabel}>Gedung</Text>
+          <Text style={styles.detailValue}>{buildingName}</Text>
+        </View>
 
 <View style={styles.detailItem}>
   <Text style={styles.detailLabel}>Ruangan</Text>
@@ -658,7 +661,7 @@ const feedbackUserName =
 
         {imageMedia.length > 0 ? (
           <View style={styles.imageGrid}>
-            {imageMedia.map((m: any) => {
+            {imageMedia.map((m: any,index) => {
               const imageUrl = getMediaUrl(m);
 
               if (!imageUrl) return null;
@@ -666,6 +669,8 @@ const feedbackUserName =
               return (
                 <Pressable
                   key={m.id || m.mediaId || imageUrl}
+                    testID={`report-media-image-${index}`}
+  accessibilityLabel={`report-media-image-${index}`}
                   style={styles.imageCard}
                   onPress={() => setPreviewUrl(imageUrl)}
                 >
@@ -703,7 +708,7 @@ const feedbackUserName =
 
         {nonImageMedia.length > 0 ? (
           <View style={styles.mediaList}>
-            {nonImageMedia.map((m: any) => {
+            {nonImageMedia.map((m: any,index) => {
               const asset = getMediaAsset(m);
               const mediaUrl = getMediaUrl(m);
 
@@ -802,6 +807,8 @@ const feedbackUserName =
       <View style={styles.actionGroup}>
         {isAdmin && selected.status === "PENDING" ? (
           <Button
+            testID="admin-open-verify-reject-button"
+  accessibilityLabel="admin-open-verify-reject-button"
             title="Verifikasi / Tolak"
             onPress={() => navigation.navigate("VerifyRejectReport", { id })}
           />
@@ -809,6 +816,8 @@ const feedbackUserName =
 
         {isAdmin && ["VERIFIED", "ASSIGNED"].includes(selected.status) ? (
           <Button
+            testID="admin-open-assign-button"
+  accessibilityLabel="admin-open-assign-button"
             title="Assign Teknisi"
             onPress={() => navigation.navigate("AssignTechnician", { id })}
           />
@@ -817,6 +826,8 @@ const feedbackUserName =
         {(isTechnician || isAdmin) &&
         ["ASSIGNED", "IN_PROGRESS"].includes(selected.status) ? (
           <Button
+            testID="technician-update-status-button"
+  accessibilityLabel="technician-update-status-button"
             title="Update Status"
             onPress={() => navigation.navigate("UpdateStatus", { id })}
           />
@@ -824,6 +835,8 @@ const feedbackUserName =
 
         {isTechnician || isAdmin ? (
           <Button
+            testID="technician-repair-note-button"
+  accessibilityLabel="technician-repair-note-button"
             title="Tambah Catatan Perbaikan"
             variant="secondary"
             onPress={() => navigation.navigate("RepairNote", { id })}
@@ -832,6 +845,8 @@ const feedbackUserName =
 
         {isTechnician || isAdmin || isReporter ? (
   <Button
+    testID="report-upload-media-button"
+  accessibilityLabel="report-upload-media-button"
     title={
       selected.status === "CANCELLED"
         ? "Upload Media Dinonaktifkan"
@@ -852,6 +867,8 @@ selected.status === "RESOLVED" &&
 !feedbackLoading &&
 !feedbackData ? (
   <Button
+    testID="report-feedback-button"
+  accessibilityLabel="report-feedback-button"
     title="Beri Feedback"
     onPress={() => navigation.navigate("Feedback", { id })}
   />
@@ -895,6 +912,8 @@ selected.status === "RESOLVED" &&
             ) : null}
 
             <Button
+             testID="report-media-preview-close-button"
+  accessibilityLabel="report-media-preview-close-button"
               title="Tutup"
               variant="secondary"
               onPress={() => setPreviewUrl(null)}

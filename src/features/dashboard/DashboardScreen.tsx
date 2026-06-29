@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/api/auth/hooks';
 import { useReports } from '@/api/reports/hooks';
 import { useNotifications } from '@/api/notifications/hooks';
-import type { MainTabParamList } from '@/app/router';
+import type { MainTabParamList } from '@/app/router1';
 
 type Props = BottomTabScreenProps<MainTabParamList, 'Dashboard'>;
 
@@ -24,7 +24,10 @@ export function DashboardScreen({ navigation }: Props) {
   return (
     <DashboardLayout title={`Halo, ${user?.name || 'User'}`}>
       <Card>
-        <Text style={{ fontWeight: '900', fontSize: 18 }}>Role: {user?.role}</Text>
+        <Text
+          testID="dashboard-role-text"
+          accessibilityLabel="dashboard-role-text"
+        style={{ fontWeight: '900', fontSize: 18 }}>Role: {user?.role}</Text>
         <Text style={{ color: '#64748B' }}>Gunakan menu bawah untuk mengakses fitur sesuai hak akses.</Text>
       </Card>
       <View style={{ flexDirection: 'row', gap: 12 }}>

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/ButtonId";
+import { Button } from "@/components/ui/Button";
 import { AppModal } from "@/components/ui/appModal";
 import { ZodInput } from "@/components/ui/ZodInput";
 import type { ZodFieldErrors } from "@/utils/zodErrors";
@@ -6,6 +6,7 @@ import type { ZodFieldErrors } from "@/utils/zodErrors";
 type Props = {
   visible: boolean;
   loading: boolean;
+
   name: string;
   slug: string;
   description: string;
@@ -24,7 +25,7 @@ type Props = {
   clearError: (field: string) => void;
 };
 
-export function UpdateCategoryModal({
+export function CreateCategoryModal({
   visible,
   loading,
   name,
@@ -43,22 +44,18 @@ export function UpdateCategoryModal({
   return (
     <AppModal
       visible={visible}
-      title="Update Kategori"
-      subtitle="Perbarui data kategori masalah."
+      title="Tambah Kategori"
+      subtitle="Masukkan kategori masalah yang dapat dipilih saat membuat laporan."
       onClose={onClose}
       footer={
         <Button
-          testID="category-update-submit-button"
-          accessibilityLabel="category-update-submit-button"
-          title="Simpan Perubahan"
+          title="Simpan Kategori"
           onPress={onSubmit}
           loading={loading}
         />
       }
     >
       <ZodInput
-        testID="category-update-name-input"
-        accessibilityLabel="category-update-name-input"
         name="name"
         label="Nama Kategori"
         value={name}
@@ -70,8 +67,6 @@ export function UpdateCategoryModal({
       />
 
       <ZodInput
-        testID="category-update-slug-input"
-        accessibilityLabel="category-update-slug-input"
         name="slug"
         label="Slug"
         value={slug}
@@ -84,24 +79,22 @@ export function UpdateCategoryModal({
       />
 
       <ZodInput
-        testID="category-update-description-input"
-        accessibilityLabel="category-update-description-input"
         name="description"
         label="Deskripsi"
         value={description}
         onChangeText={setDescription}
-        placeholder="Contoh: Masalah pendingin ruangan."
+        placeholder="Contoh: Masalah pendingin ruangan seperti AC tidak dingin atau bocor."
         errors={errors}
         clearError={clearError}
         multiline
         numberOfLines={3}
         textAlignVertical="top"
-        style={{ minHeight: 90 }}
+        style={{
+          minHeight: 90,
+        }}
       />
 
       <ZodInput
-        testID="category-update-sla-input"
-        accessibilityLabel="category-update-sla-input"
         name="defaultSlaHours"
         label="SLA Default"
         value={defaultSlaHours}

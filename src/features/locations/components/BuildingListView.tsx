@@ -24,22 +24,40 @@ export function BuildingListView({
   return (
     <>
       <View style={styles.summaryRow}>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryValue}>{buildings.length}</Text>
+        <View
+                 testID="building-summary-card"
+          accessibilityLabel="building-summary-card"
+        style={styles.summaryCard}>
+          <Text
+    testID="building-summary-count"
+            accessibilityLabel="building-summary-count"
+          style={styles.summaryValue}>{buildings.length}</Text>
           <Text style={styles.summaryLabel}>Gedung</Text>
         </View>
 
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryValue}>{roomCount}</Text>
+        <View
+                 testID="room-summary-card"
+          accessibilityLabel="room-summary-card"
+        style={styles.summaryCard}>
+          <Text
+              testID="room-summary-count"
+            accessibilityLabel="room-summary-count"
+          style={styles.summaryValue}>{roomCount}</Text>
           <Text style={styles.summaryLabel}>Ruangan aktif</Text>
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Daftar Gedung</Text>
+      <Text 
+           testID="building-list-title"
+        accessibilityLabel="building-list-title"
+      style={styles.sectionTitle}>Daftar Gedung</Text>
 
       {buildings.length === 0 ? (
          <Card>
-    <Text style={styles.emptyText}>
+    <Text
+        testID="building-empty-text"
+            accessibilityLabel="building-empty-text"
+    style={styles.emptyText}>
       {searchQuery.trim()
         ? "Tidak ada gedung atau ruangan yang cocok dengan pencarian."
         : "Belum ada data gedung. Tambahkan gedung terlebih dahulu."}
@@ -50,9 +68,10 @@ export function BuildingListView({
           scrollEnabled={false}
           data={buildings}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
+          renderItem={({ item ,index}) => (
             <BuildingCard
               building={item}
+              index={index}
               onDetail={onDetail}
               onUpdate={onUpdate}
               onDelete={onDelete}

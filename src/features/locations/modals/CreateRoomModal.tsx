@@ -1,7 +1,7 @@
 import { Text } from "react-native";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ButtonId";
 import { AppModal } from "@/components/ui/appModal";
-import { SelectorInput } from "@/components/ui/selectorInput";
+import { SelectorInput } from "@/components/ui/selectorInputId";
 import { ZodInput } from "@/components/ui/ZodInput";
 import type { Building } from "@/api/locations/types";
 import type { ZodFieldErrors } from "@/utils/zodErrors";
@@ -35,6 +35,8 @@ export function CreateRoomModal(props: Props) {
       onClose={props.onClose}
       footer={
         <Button
+             testID="room-submit-button"
+          accessibilityLabel="room-submit-button"
           title="Simpan Ruangan"
           onPress={props.onSubmit}
           loading={props.loading}
@@ -42,6 +44,9 @@ export function CreateRoomModal(props: Props) {
       }
     >
       <SelectorInput<Building>
+                testID="room-building-select"
+        accessibilityLabel="room-building-select"
+        optionTestIDPrefix="room-building-option"
         label="Gedung"
         placeholder="Ketik nama gedung..."
         options={props.buildings}
@@ -60,6 +65,8 @@ export function CreateRoomModal(props: Props) {
 
       {props.errors.buildingId?.[0] ? (
         <Text
+          testID="room-building-error"
+          accessibilityLabel="room-building-error"
           style={{
             color: "#DC2626",
             fontSize: 12,
@@ -73,6 +80,8 @@ export function CreateRoomModal(props: Props) {
       ) : null}
 
       <ZodInput
+          testID="room-name-input"
+        accessibilityLabel="room-name-input"
         name="name"
         label="Nama Ruangan"
         value={props.name}
@@ -84,6 +93,8 @@ export function CreateRoomModal(props: Props) {
       />
 
       <ZodInput
+        testID="room-code-input"
+        accessibilityLabel="room-code-input"
         name="code"
         label="Kode Ruangan"
         value={props.code}
@@ -95,6 +106,8 @@ export function CreateRoomModal(props: Props) {
       />
 
       <ZodInput
+              testID="room-floor-input"
+        accessibilityLabel="room-floor-input"
         name="floorName"
         label="Lantai"
         value={props.floorName}
@@ -105,6 +118,8 @@ export function CreateRoomModal(props: Props) {
       />
 
       <ZodInput
+      testID="room-description-input"
+        accessibilityLabel="room-description-input"
         name="description"
         label="Deskripsi"
         value={props.description}

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/ButtonId";
+import { Button } from "@/components/ui/Button";
 import { AppModal } from "@/components/ui/appModal";
 import { ZodInput } from "@/components/ui/ZodInput";
 import type { ZodFieldErrors } from "@/utils/zodErrors";
@@ -48,8 +48,6 @@ export function UpdateCategoryModal({
       onClose={onClose}
       footer={
         <Button
-          testID="category-update-submit-button"
-          accessibilityLabel="category-update-submit-button"
           title="Simpan Perubahan"
           onPress={onSubmit}
           loading={loading}
@@ -57,8 +55,6 @@ export function UpdateCategoryModal({
       }
     >
       <ZodInput
-        testID="category-update-name-input"
-        accessibilityLabel="category-update-name-input"
         name="name"
         label="Nama Kategori"
         value={name}
@@ -70,8 +66,6 @@ export function UpdateCategoryModal({
       />
 
       <ZodInput
-        testID="category-update-slug-input"
-        accessibilityLabel="category-update-slug-input"
         name="slug"
         label="Slug"
         value={slug}
@@ -84,8 +78,6 @@ export function UpdateCategoryModal({
       />
 
       <ZodInput
-        testID="category-update-description-input"
-        accessibilityLabel="category-update-description-input"
         name="description"
         label="Deskripsi"
         value={description}
@@ -100,8 +92,6 @@ export function UpdateCategoryModal({
       />
 
       <ZodInput
-        testID="category-update-sla-input"
-        accessibilityLabel="category-update-sla-input"
         name="defaultSlaHours"
         label="SLA Default"
         value={defaultSlaHours}

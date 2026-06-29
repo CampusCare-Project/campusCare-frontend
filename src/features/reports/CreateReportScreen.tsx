@@ -5,10 +5,10 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { toast } from "sonner-native";
 
 import { Screen } from "@/components/ui/Screen";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ButtonId";
 import { Card } from "@/components/ui/Card";
 import { ZodInput } from "@/components/ui/ZodInput";
-import { SelectorInput } from "@/components/ui/selectorInput";
+import { SelectorInput } from "@/components/ui/selectorInputId";
 import { useCategories } from "@/api/categories/hooks";
 import { useLocations } from "@/api/locations/hooks";
 import { reportService } from "@/api/reports/service";
@@ -26,7 +26,7 @@ import { saveLocalReport,
   listCachedRooms,
  } from "@/offline/db";
 
-import type { RootStackParamList } from "@/app/router";
+import type { RootStackParamList } from "@/app/router1";
 import type { ReportPriority } from "@/api/reports/types";
 import type { ZodFieldErrors } from "@/utils/zodErrors";
 import { getApiErrorMessage } from "@/utils/apiError";
@@ -450,7 +450,10 @@ await saveLocalReport(
   return (
     <Screen>
       <View style={styles.header}>
-        <Text style={styles.title}>Buat Laporan</Text>
+        <Text style={styles.title}
+          testID="create-report-title"
+  accessibilityLabel="create-report-title"
+        >Buat Laporan</Text>
         <Text style={styles.subtitle}>
           Laporkan kerusakan fasilitas kampus dengan kategori, lokasi, foto, dan
           prioritas penanganan.
@@ -461,6 +464,8 @@ await saveLocalReport(
         <Text style={styles.sectionTitle}>Informasi Laporan</Text>
 
         <ZodInput
+          testID="create-report-title-input"
+  accessibilityLabel="create-report-title-input"
           name="title"
           label="Judul"
           value={title}
@@ -475,6 +480,8 @@ await saveLocalReport(
         />
 
         <ZodInput
+          testID="create-report-description-input"
+  accessibilityLabel="create-report-description-input"
           name="description"
           label="Deskripsi"
           value={description}
@@ -497,6 +504,9 @@ await saveLocalReport(
         <Text style={styles.sectionTitle}>Kategori dan Prioritas</Text>
 
         <SelectorInput
+          testID="create-report-category-select"
+  accessibilityLabel="create-report-category-select"
+    optionTestIDPrefix="create-report-category-option"
           label="Kategori"
           placeholder="Cari dan pilih kategori laporan"
           options={categoryOptions}
@@ -513,6 +523,9 @@ await saveLocalReport(
         />
 
         <SelectorInput
+          testID="create-report-priority-select"
+  accessibilityLabel="create-report-priority-select"
+  optionTestIDPrefix="create-report-priority-option"
           label="Prioritas"
           placeholder="Cari dan pilih prioritas"
           options={PRIORITY_OPTIONS}
@@ -529,6 +542,9 @@ await saveLocalReport(
         <Text style={styles.sectionTitle}>Lokasi</Text>
 
         <SelectorInput
+          testID="create-report-building-select"
+  accessibilityLabel="create-report-building-select"
+  optionTestIDPrefix="create-report-building-option"
           label="Gedung"
           placeholder="Cari dan pilih gedung, opsional"
           options={buildingOptions}
@@ -544,6 +560,9 @@ await saveLocalReport(
         />
 
         <SelectorInput
+          testID="create-report-room-select"
+  accessibilityLabel="create-report-room-select"
+  optionTestIDPrefix="create-report-room-option"
           label="Ruangan"
           placeholder={
             buildingId
@@ -561,6 +580,8 @@ await saveLocalReport(
         />
 
         <ZodInput
+          testID="create-report-location-text-input"
+  accessibilityLabel="create-report-location-text-input"
           name="locationText"
           label="Keterangan Lokasi"
           value={locationText}
@@ -594,6 +615,8 @@ await saveLocalReport(
         </View>
 
         <Button
+          testID="create-report-use-gps-button"
+  accessibilityLabel="create-report-use-gps-button"
           title="Gunakan Lokasi Saat Ini"
           variant="secondary"
           onPress={useCurrentLocation}
@@ -608,6 +631,8 @@ await saveLocalReport(
         </Text>
 
         <AttachmentPicker
+          testID="create-report-attachment-picker"
+  accessibilityLabel="create-report-attachment-picker"
   label="Media Laporan"
   helperText="Upload foto kerusakan dari kamera, galeri, atau file dari perangkat."
   value={attachments}
@@ -619,6 +644,8 @@ await saveLocalReport(
       </Card>
 
       <Button
+        testID="create-report-submit-button"
+  accessibilityLabel="create-report-submit-button"
         title="Kirim Laporan"
         loading={loading}
         disabled={loading}

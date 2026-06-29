@@ -77,26 +77,11 @@ const REPORT_CREATOR_ROLES: UserRole[] = ["STUDENT", "STAFF", "ADMIN"];
 const ADMIN_ONLY: UserRole[] = ["ADMIN"];
 const TECHNICIAN_ONLY: UserRole[] = ["TECHNICIAN"];
 const TECHNICIAN_OR_ADMIN: UserRole[] = ["TECHNICIAN", "ADMIN"];
+
 function TabIcon({ label }: { label: string }) {
   return <Text>{label}</Text>;
 }
-function makeTabOptions({
-  label,
-  testID,
-  icon,
-}: {
-  label: string;
-  testID: string;
-  icon: string;
-}) {
-  return {
-    title: label,
-    tabBarLabel: label,
-    tabBarButtonTestID: testID,
-    tabBarAccessibilityLabel: testID,
-    tabBarIcon: () => <TabIcon label={icon} />,
-  };
-}
+
 function MainTabs() {
   const { user } = useAuth();
 
@@ -104,26 +89,23 @@ function MainTabs() {
     <Tab.Navigator screenOptions={{ headerShown: false }}>
       <Tab.Screen
         name="Dashboard"
-        options={makeTabOptions({
-          label: "Dashboard",
-          testID: "tab-dashboard",
-          icon: "🏠",
-        })}
+        options={{
+          tabBarIcon: () => <TabIcon label="🏠" />,
+        }}
       >
         {(props) => (
           <RoleGuard allowedRoles={ALL_ROLES}>
-            <DashboardScreen {...props} />
+            <DashboardScreen {...props}/>
           </RoleGuard>
         )}
       </Tab.Screen>
 
       <Tab.Screen
         name="Reports"
-        options={makeTabOptions({
-          label: "Laporan",
-          testID: "tab-reports",
-          icon: "📋",
-        })}
+        options={{
+          title: "Laporan",
+          tabBarIcon: () => <TabIcon label="📋" />,
+        }}
       >
         {(props) => (
           <RoleGuard allowedRoles={ALL_ROLES}>
@@ -135,11 +117,10 @@ function MainTabs() {
       {user?.role === "ADMIN" ? (
         <Tab.Screen
           name="Admin"
-          options={makeTabOptions({
-            label: "Admin",
-            testID: "tab-admin",
-            icon: "🛡️",
-          })}
+          options={{
+            title: "Admin",
+            tabBarIcon: () => <TabIcon label="🛡️" />,
+          }}
         >
           {(props) => (
             <RoleGuard allowedRoles={ADMIN_ONLY}>
@@ -152,15 +133,14 @@ function MainTabs() {
       {user?.role === "TECHNICIAN" ? (
         <Tab.Screen
           name="Technician"
-          options={makeTabOptions({
-            label: "Teknisi",
-            testID: "tab-technician",
-            icon: "🛠️",
-          })}
+          options={{
+            title: "Tugas",
+            tabBarIcon: () => <TabIcon label="🛠️" />,
+          }}
         >
           {(props) => (
             <RoleGuard allowedRoles={TECHNICIAN_ONLY}>
-              <TechnicianTasksScreen {...props} />
+              <TechnicianTasksScreen {...props}/>
             </RoleGuard>
           )}
         </Tab.Screen>
@@ -169,11 +149,10 @@ function MainTabs() {
       {user?.role === "ADMIN" ? (
         <Tab.Screen
           name="Categories"
-          options={makeTabOptions({
-            label: "Kategori",
-            testID: "tab-categories",
-            icon: "🏷️",
-          })}
+          options={{
+            title: "Kategori",
+            tabBarIcon: () => <TabIcon label="🏷️" />,
+          }}
         >
           {() => (
             <RoleGuard allowedRoles={ADMIN_ONLY}>
@@ -183,31 +162,29 @@ function MainTabs() {
         </Tab.Screen>
       ) : null}
 
-      {user?.role === "ADMIN" ? (
-        <Tab.Screen
-          name="Users"
-          options={makeTabOptions({
-            label: "User",
-            testID: "tab-users",
-            icon: "👥",
-          })}
-        >
-          {(props) => (
-            <RoleGuard allowedRoles={ADMIN_ONLY}>
-              <UserListScreen {...(props as any)} />
-            </RoleGuard>
-          )}
-        </Tab.Screen>
-      ) : null}
+  {user?.role === "ADMIN" ? (
+  <Tab.Screen
+    name="Users"
+    options={{
+      title: "User",
+      tabBarIcon: () => <TabIcon label="👥" />,
+    }}
+  >
+    {(props) => (
+      <RoleGuard allowedRoles={ADMIN_ONLY}>
+        <UserListScreen {...(props as any)} />
+      </RoleGuard>
+    )}
+  </Tab.Screen>
+) : null}
 
       {user?.role === "ADMIN" ? (
         <Tab.Screen
           name="Locations"
-          options={makeTabOptions({
-            label: "Lokasi",
-            testID: "tab-locations",
-            icon: "📍",
-          })}
+          options={{
+            title: "Lokasi",
+            tabBarIcon: () => <TabIcon label="📍" />,
+          }}
         >
           {() => (
             <RoleGuard allowedRoles={ADMIN_ONLY}>
@@ -219,11 +196,10 @@ function MainTabs() {
 
       <Tab.Screen
         name="Notifications"
-        options={makeTabOptions({
-          label: "Notifikasi",
-          testID: "tab-notifications",
-          icon: "🔔",
-        })}
+        options={{
+          title: "Notif",
+          tabBarIcon: () => <TabIcon label="🔔" />,
+        }}
       >
         {() => (
           <RoleGuard allowedRoles={ALL_ROLES}>
@@ -234,11 +210,10 @@ function MainTabs() {
 
       <Tab.Screen
         name="Offline"
-        options={makeTabOptions({
-          label: "Offline",
-          testID: "tab-offline",
-          icon: "📦",
-        })}
+        options={{
+          title: "Offline",
+          tabBarIcon: () => <TabIcon label="📦" />,
+        }}
       >
         {() => (
           <RoleGuard allowedRoles={ALL_ROLES}>
@@ -249,11 +224,10 @@ function MainTabs() {
 
       <Tab.Screen
         name="Profile"
-        options={makeTabOptions({
-          label: "Profil",
-          testID: "tab-profile",
-          icon: "👤",
-        })}
+        options={{
+          title: "Profil",
+          tabBarIcon: () => <TabIcon label="👤" />,
+        }}
       >
         {() => (
           <RoleGuard allowedRoles={ALL_ROLES}>

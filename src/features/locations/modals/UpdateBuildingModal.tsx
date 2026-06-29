@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ButtonId";
 import { AppModal } from "@/components/ui/appModal";
 import { GeoPointInput } from "@/components/ui/GeoPointInput";
 import { ZodInput } from "@/components/ui/ZodInput";
@@ -32,6 +32,8 @@ export function UpdateBuildingModal(props: Props) {
       onClose={props.onClose}
       footer={
         <Button
+            testID="building-update-submit-button"
+          accessibilityLabel="building-update-submit-button"
           title="Simpan Perubahan"
           onPress={props.onSubmit}
           loading={props.loading}
@@ -39,6 +41,8 @@ export function UpdateBuildingModal(props: Props) {
       }
     >
       <ZodInput
+         testID="building-update-name-input"
+        accessibilityLabel="building-update-name-input"
         name="name"
         label="Nama Gedung"
         value={props.name}
@@ -50,6 +54,8 @@ export function UpdateBuildingModal(props: Props) {
       />
 
       <ZodInput
+             testID="building-update-code-input"
+        accessibilityLabel="building-update-code-input"
         name="code"
         label="Kode Gedung"
         value={props.code}
@@ -61,6 +67,8 @@ export function UpdateBuildingModal(props: Props) {
       />
 
       <ZodInput
+        testID="building-update-address-input"
+        accessibilityLabel="building-update-address-input"
         name="address"
         label="Alamat / Area"
         value={props.address}
@@ -77,6 +85,8 @@ export function UpdateBuildingModal(props: Props) {
         onLongitudeChange={props.setLongitude}
         errors={props.errors}
         clearError={props.clearError}
+                latitudeTestID="building-update-latitude-input"
+        longitudeTestID="building-update-longitude-input"
         onAddressFound={(address) => {
           if (!props.address.trim()) {
             props.setAddress(address);

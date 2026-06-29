@@ -420,7 +420,13 @@ const selectedBuildingRooms = useMemo(() => {
   return (
     <DashboardLayout title="Lokasi Kampus">
       <View style={styles.topBar}>
-        <Text style={styles.pageTitle}>Manajemen Lokasi</Text>
+         <Text
+        testID="locations-title"
+        accessibilityLabel="locations-title"
+        style={styles.pageTitle}
+      >
+        Manajemen Lokasi
+      </Text>
         <Text style={styles.pageSubtitle}>
           Kelola gedung dan ruangan yang digunakan pada laporan CampusCare.
         </Text>
@@ -429,6 +435,8 @@ const selectedBuildingRooms = useMemo(() => {
      {viewMode === "BUILDING_LIST" ? (
   <View style={styles.actionRow}>
     <Pressable
+          testID="building-create-button"
+          accessibilityLabel="building-create-button"
       style={styles.actionButton}
       onPress={() => setCreateBuildingVisible(true)}
     >
@@ -436,6 +444,8 @@ const selectedBuildingRooms = useMemo(() => {
     </Pressable>
 
     <Pressable
+              testID="room-create-button"
+          accessibilityLabel="room-create-button"
       style={[styles.actionButton, styles.actionButtonDark]}
       onPress={() => openCreateRoom()}
     >
@@ -445,6 +455,8 @@ const selectedBuildingRooms = useMemo(() => {
 ) : null}
 
 <SearchInput
+      testID="locations-search-input"
+      accessibilityLabel="locations-search-input"
   value={searchQuery}
   onChangeText={setSearchQuery}
   placeholder={

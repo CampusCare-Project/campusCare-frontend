@@ -5,13 +5,13 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Screen } from "@/components/ui/Screen";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { SelectorInput } from "@/components/ui/selectorInput";
+import { SelectorInput } from "@/components/ui/selectorInputId";
 
 import { reportService } from "@/api/reports/service";
 import { useTechnicians } from "@/api/technicians/hooks";
 import type { Technician } from "@/api/technicians/types";
 
-import type { RootStackParamList } from "@/app/router";
+import type { RootStackParamList } from "@/app/router1";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AssignTechnician">;
 
@@ -56,6 +56,8 @@ export function AssignTechnicianScreen({ route, navigation }: Props) {
   return (
     <Screen>
       <Text
+        testID="assign-technician-title"
+        accessibilityLabel="assign-technician-title"
         style={{
           fontSize: 22,
           fontWeight: "700",
@@ -78,6 +80,9 @@ export function AssignTechnicianScreen({ route, navigation }: Props) {
       </Text>
 
       <SelectorInput<Technician>
+  testID="admin-technician-select"
+  accessibilityLabel="admin-technician-select"
+  optionTestIDPrefix="admin-technician-option"
         label="Teknisi"
         placeholder="Ketik nama teknisi..."
         options={technicians}

@@ -20,7 +20,7 @@ import {
 import { mediaService } from "@/api/media/service";
 import { reportService } from "@/api/reports/service";
 
-import type { RootStackParamList } from "@/app/router";
+import type { RootStackParamList } from "@/app/router1";
 import type { ReportMediaType } from "@/api/reports/types";
 import { getApiErrorMessage } from "@/utils/apiError";
 

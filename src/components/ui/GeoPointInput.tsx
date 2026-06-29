@@ -19,6 +19,8 @@ type GeoPointInputProps = {
 
   onAddressFound?: (address: string) => void;
   enableReverseGeocode?: boolean;
+    latitudeTestID?: string;
+  longitudeTestID?: string;
 };
 
 export function GeoPointInput({
@@ -31,6 +33,8 @@ export function GeoPointInput({
   latitudeName = "latitude",
   longitudeName = "longitude",
   onAddressFound,
+  latitudeTestID,
+  longitudeTestID,
   enableReverseGeocode = true,
 }: GeoPointInputProps) {
   const [loading, setLoading] = useState(false);
@@ -135,6 +139,8 @@ export function GeoPointInput({
         placeholder="Contoh: -7.596551"
         keyboardType="numeric"
         errors={errors}
+          testID={latitudeTestID}
+  accessibilityLabel={latitudeTestID}
         clearError={clearError}
       />
 
@@ -146,6 +152,8 @@ export function GeoPointInput({
         placeholder="Contoh: 110.950721"
         keyboardType="numeric"
         errors={errors}
+             testID={longitudeTestID}
+  accessibilityLabel={longitudeTestID}
         clearError={clearError}
       />
     </View>
