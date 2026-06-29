@@ -14,6 +14,12 @@ export function ProfileScreen() {
   };
   return (
     <DashboardLayout title="Profil">
+      <Text
+  testID="profile-title"
+  accessibilityLabel="profile-title"
+>
+  Profil
+</Text>
       <Card>
         <Text style={{ fontWeight: '900', fontSize: 18 }}>{user?.name}</Text>
         <Text>{user?.email}</Text>
