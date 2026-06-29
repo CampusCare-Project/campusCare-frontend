@@ -576,7 +576,16 @@ const feedbackUserName =
   getUserDisplayName(feedbackUserId ? usersById[feedbackUserId] : null) ||
   (feedbackUserId ? (usersLoading ? "Memuat..." : `ID: ${feedbackUserId}`) : "-");
   return (
+    
     <Screen>
+      <Pressable
+  testID="report-detail-back-button"
+  accessibilityLabel="report-detail-back-button"
+  onPress={() => navigation.goBack()}
+  style={{ padding: 12 }}
+>
+  <Text>← Kembali</Text>
+</Pressable>
       <Card>
         <Text style={styles.title}
          testID="report-detail-title"
