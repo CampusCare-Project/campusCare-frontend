@@ -3,7 +3,7 @@ import { Alert, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import { Screen } from "@/components/ui/Screen";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ButtonId";
 import { Input } from "@/components/ui/Input";
 import { SelectorInput } from "@/components/ui/selectorInputId";
 
@@ -126,6 +126,8 @@ export function AssignTechnicianScreen({ route, navigation }: Props) {
       ) : null}
 
       <Input
+        testID="admin-assign-note-input"
+  accessibilityLabel="admin-assign-note-input"
         label="Catatan"
         value={note}
         onChangeText={setNote}
@@ -133,6 +135,8 @@ export function AssignTechnicianScreen({ route, navigation }: Props) {
       />
 
       <Button
+        testID="admin-assign-submit-button"
+  accessibilityLabel="admin-assign-submit-button"
         title="Assign"
         onPress={submit}
         loading={loading}
