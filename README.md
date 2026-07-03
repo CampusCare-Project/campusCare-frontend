@@ -264,27 +264,29 @@ cp .env.example .env
 
 ### 4. Jalankan Aplikasi
 
-**Mode Development (umum):**
+**Mode Development (umum — pakai Expo Go):**
 ```bash
-npm start
+npx expo start
 ```
-Setelah Expo Dev Server berjalan, akan muncul QR Code di terminal. Scan dengan aplikasi **Expo Go** di perangkat fisik, atau tekan tombol di bawah untuk membuka emulator:
+Setelah Expo Dev Server berjalan, akan muncul QR Code di terminal.
+- **Perangkat fisik**: Scan QR Code dengan aplikasi **Expo Go** (Android/iOS)
+- **Emulator**: Tekan `a` untuk Android atau `i` untuk iOS di terminal
 
 | Perintah | Platform |
 |---|---|
-| `npm run android` | Jalankan di Android Emulator |
-| `npm run ios` | Jalankan di iOS Simulator (macOS) |
-| `npm run web` | Jalankan di browser web |
+| `npx expo start --android` | Jalankan langsung di Android Emulator |
+| `npx expo start --ios` | Jalankan langsung di iOS Simulator (macOS) |
+| `npx expo start --web` | Jalankan di browser web |
 
 **Mode Development dengan Cache Bersih:**
 ```bash
-npm run start:clear
+npx expo start -c
 ```
 Gunakan perintah ini jika mengalami masalah cache Metro bundler.
 
 **Cek kesehatan proyek:**
 ```bash
-npm run doctor
+npx expo doctor
 ```
 Perintah ini akan memeriksa konfigurasi Expo dan melaporkan jika ada dependensi yang tidak kompatibel.
 
